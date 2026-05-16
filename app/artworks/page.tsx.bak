@@ -65,7 +65,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
           </span>
           <Link
             href="/artworks/new"
-            className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-2 transition-colors"
+            className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-shade transition-colors"
           >
             + new
           </Link>
@@ -75,19 +75,19 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
       {/* Compact filter bar — one row */}
       <form
         method="GET"
-        className="flex flex-wrap items-center gap-2 mb-8 font-mono text-meta border border-current/40 p-2 bg-paper-2/40"
+        className="flex flex-wrap items-center gap-2 mb-8 font-mono text-meta border border-current/40 p-2 bg-paper-shade/40"
       >
         <input
           type="text"
           name="q"
           defaultValue={filters.q ?? ""}
           placeholder="search title or inventory #"
-          className="border border-current/40 bg-paper-1 px-2 py-1 flex-1 min-w-[14rem]"
+          className="border border-current/40 bg-paper px-2 py-1 flex-1 min-w-[14rem]"
         />
         <select
           name="series_id"
           defaultValue={filters.series_id ?? ""}
-          className="border border-current/40 bg-paper-1 px-2 py-1"
+          className="border border-current/40 bg-paper px-2 py-1"
         >
           <option value="">all series</option>
           {series.map((s) => (
@@ -99,7 +99,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
         <select
           name="availability"
           defaultValue={(filters.availability ?? []).join(",")}
-          className="border border-current/40 bg-paper-1 px-2 py-1"
+          className="border border-current/40 bg-paper px-2 py-1"
         >
           <option value="">any availability</option>
           <option value="available">available</option>
@@ -120,7 +120,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
         </label>
         <button
           type="submit"
-          className="border border-current px-3 py-1 hover:bg-paper-1 transition-colors"
+          className="border border-current px-3 py-1 hover:bg-paper transition-colors"
         >
           apply
         </button>
@@ -162,7 +162,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
                     (archived ? "opacity-50" : "")
                   }
                 >
-                  <div className="bg-paper-2 aspect-square overflow-hidden border border-current/20 group-hover:border-current/60 transition-colors">
+                  <div className="bg-paper-shade aspect-square overflow-hidden border border-current/20 group-hover:border-current/60 transition-colors">
                     {r.primary_image_id != null ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
@@ -195,7 +195,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
                         className={
                           "inline-flex items-center font-mono text-[10px] border px-1.5 py-0.5 " +
                           (AVAIL_TONE[r.availability_status] ||
-                            "bg-paper-2 border-current/40")
+                            "bg-paper-shade border-current/40")
                         }
                       >
                         {r.availability_status.replace(/_/g, " ")}
