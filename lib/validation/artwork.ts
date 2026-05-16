@@ -59,6 +59,19 @@ export type ConditionStatus = (typeof CONDITION_STATUSES)[number];
  */
 export const INVENTORY_NUMBER_RE = /^RKK-[A-Z]{2,4}-\d{3,}(\/E\d+|\/AP\d+)?$/;
 
+// ---- CREATE helpers ---------------------------------------------------------
+//
+// For INSERT statements an omitted optional field must materialise as a
+// concrete value the DB can store (NULL for nullable columns, 0 for the
+// integer-encoded boolean flags). The transforms below collapse undefined
+// down to that concrete value.
+//
+// IMPORTANT: do NOT use these in UpdateArtworkPatch. On update, "the caller
+// did not mention this field" must stay distinguishable from "the caller set
+// this field to NULL/0". Otherwise a single-key bulk patch ends up rewriting
+// every nullable column on every row. There's a separate set of patch-
+// preserving helpers below for that purpose.
+
 const optionalNullableInt = z
   .union([z.number().int(), z.null()])
   .optional()
@@ -82,6 +95,36 @@ const boolFlag = z
   .union([z.boolean(), z.literal(0), z.literal(1)])
   .optional()
   .transform((v) => (v === true || v === 1 ? 1 : 0));
+
+// ---- PATCH helpers ----------------------------------------------------------
+//
+// Same input shape as the create helpers, but undefined is preserved end-to-
+// end. That lets bulkUpdateArtworks / updateArtwork tell the difference
+// between "omit this column from the SET clause" and "set this column to
+// NULL". Trimming/0-1 coercion still runs when the caller actually supplies
+// a value.
+
+const patchInt = z.union([z.number().int(), z.null()]).optional();
+
+const patchNum = z.union([z.number(), z.null()]).optional();
+
+const patchString = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((v) => {
+    if (v === undefined) return undefined;
+    if (v === null) return null;
+    const trimmed = v.trim();
+    return trimmed.length === 0 ? null : trimmed;
+  });
+
+const patchBool = z
+  .union([z.boolean(), z.literal(0), z.literal(1)])
+  .optional()
+  .transform((v) => {
+    if (v === undefined) return undefined;
+    return v === true || v === 1 ? 1 : 0;
+  });
 
 // ---------------------------------------------------------------------------
 // Create input
@@ -180,50 +223,133 @@ export const UpdateArtworkPatch = z
   .object({
     title: z.string().min(1).max(500).transform((s) => s.trim()).optional(),
 
-    edition_id: optionalNullableInt,
-    edition_number: optionalNullableInt,
-    artist_proof: boolFlag,
-    ap_number: optionalNullableInt,
+    edition_id: patchInt,
+    edition_number: patchInt,
+    artist_proof: patchBool,
+    ap_number: patchInt,
 
     year_start: z.number().int().min(1900).max(2100).optional(),
-    year_end: optionalNullableInt,
-    medium_id: optionalNullableInt,
-    materials: optionalNullableString,
+    year_end: patchInt,
+    medium_id: patchInt,
+    materials: patchString,
 
     height_in: z.number().positive().optional(),
     width_in: z.number().positive().optional(),
-    depth_in: optionalNullableNum,
-    framed_height_in: optionalNullableNum,
-    framed_width_in: optionalNullableNum,
-    framed_depth_in: optionalNullableNum,
-    weight_kg: optionalNullableNum,
+    depth_in: patchNum,
+    framed_height_in: patchNum,
+    framed_width_in: patchNum,
+    framed_depth_in: patchNum,
+    weight_kg: patchNum,
 
-    short_description: optionalNullableString,
-    full_description: optionalNullableString,
-    artist_note: optionalNullableString,
-    internal_note: optionalNullableString,
+    short_description: patchString,
+    full_description: patchString,
+    artist_note: patchString,
+    internal_note: patchString,
 
-    price_usd_cents: optionalNullableInt,
-    price_inr_paise: optionalNullableInt,
-    price_visible_public: boolFlag,
-    price_visible_dealer: boolFlag,
+    price_usd_cents: patchInt,
+    price_inr_paise: patchInt,
+    price_visible_public: patchBool,
+    price_visible_dealer: patchBool,
 
     availability_status: z.enum(AVAILABILITY_STATUSES).optional(),
     condition_status: z.enum(CONDITION_STATUSES).optional(),
 
-    website_visible: boolFlag,
-    featured: boolFlag,
-    display_order: optionalNullableInt,
-    seo_title: optionalNullableString,
-    seo_description: optionalNullableString,
+    website_visible: patchBool,
+    featured: patchBool,
+    display_order: patchInt,
+    seo_title: patchString,
+    seo_description: patchString,
 
-    primary_image_id: optionalNullableInt
+    primary_image_id: patchInt
   })
-  .refine((v) => Object.keys(v).length > 0, {
-    message: "patch must contain at least one field"
-  });
+  .refine(
+    (v) =>
+      Object.values(v).some((x) => x !== undefined),
+    {
+      message: "patch must contain at least one field"
+    }
+  );
 
 export type UpdateArtworkPatch = z.infer<typeof UpdateArtworkPatch>;
+
+/**
+ * Fields permitted through /api/artworks/bulk.
+ *
+ * The single-row PATCH endpoint trusts UpdateArtworkPatch wholesale because
+ * the caller is acting on one artwork in front of them. The bulk endpoint
+ * touches up to 500 rows in one shot, so the blast radius of an accidental
+ * field is much bigger — a stray `primary_image_id: null` would silently
+ * orphan the hero image for every selected artwork.
+ *
+ * Locked 2026-05-17 after Raghava batch-set "sold" and noticed images
+ * looked off on the affected rows. Even though that specific patch didn't
+ * touch images, the bulk endpoint should never be ABLE to touch identity
+ * fields (slug, inventory_number, series_id), archive metadata, or the
+ * primary_image_id pointer — those need their own dedicated surfaces.
+ *
+ * If a new field needs batch-edit support, add it here AND wire it into
+ * BatchActionBar's `fields[]`. Keep both lists in sync.
+ */
+export const BULK_ALLOWED_FIELDS = [
+  "title",
+  "edition_number",
+  "ap_number",
+  "artist_proof",
+  "edition_id",
+  "year_start",
+  "year_end",
+  "medium_id",
+  "materials",
+  "height_in",
+  "width_in",
+  "depth_in",
+  "framed_height_in",
+  "framed_width_in",
+  "framed_depth_in",
+  "weight_kg",
+  "short_description",
+  "full_description",
+  "artist_note",
+  "internal_note",
+  "price_usd_cents",
+  "price_inr_paise",
+  "price_visible_public",
+  "price_visible_dealer",
+  "availability_status",
+  "condition_status",
+  "website_visible",
+  "featured",
+  "display_order",
+  "seo_title",
+  "seo_description"
+] as const;
+
+export type BulkAllowedField = (typeof BULK_ALLOWED_FIELDS)[number];
+
+const BULK_ALLOWED_SET: ReadonlySet<string> = new Set(BULK_ALLOWED_FIELDS);
+
+/**
+ * Tighter wrapper around UpdateArtworkPatch for the bulk endpoint.
+ * Strips any field the BatchActionBar shouldn't be able to reach AND
+ * rejects the patch if a forbidden field was present at all (so a
+ * misbehaved client gets a 400 instead of a silent partial-apply).
+ */
+export const BulkUpdateArtworkPatch = UpdateArtworkPatch.superRefine(
+  (val, ctx) => {
+    for (const key of Object.keys(val)) {
+      if ((val as Record<string, unknown>)[key] === undefined) continue;
+      if (!BULK_ALLOWED_SET.has(key)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `field "${key}" cannot be edited via bulk; use the single-artwork surface`
+        });
+      }
+    }
+  }
+);
+
+export type BulkUpdateArtworkPatch = z.infer<typeof BulkUpdateArtworkPatch>;
 
 // ---------------------------------------------------------------------------
 // Archive input

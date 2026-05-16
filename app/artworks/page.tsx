@@ -72,12 +72,14 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
             <span className="red-word">Artworks</span>
           </h1>
         </div>
-        <Link
-          href="/artworks/new"
-          className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-2 transition-colors"
-        >
-          + new
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/artworks/new"
+            className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-2 transition-colors"
+          >
+            + new
+          </Link>
+        </div>
       </div>
 
       <ArtworkFilters

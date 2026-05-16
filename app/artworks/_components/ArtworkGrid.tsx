@@ -146,14 +146,36 @@ export function ArtworkGrid({
     lastToggledRef.current = null;
   }
 
-  function onApplied(updatedIds: number[]) {
-    // Selection clears, then router.refresh pulls fresh server data.
+  function onApplied(
+    updatedIds: number[],
+    patch: Record<string, string | number | boolean | null>,
+  ) {
+    // 1. Optimistic merge — the patch already committed server-side, so
+    //    apply it locally for every updated id. This is the visual
+    //    feedback the user expects right after clicking Apply, and it
+    //    works whether the affected rows are in the first server-rendered
+    //    batch or in a lazy-loaded later batch.
+    if (updatedIds.length > 0) {
+      const updatedSet = new Set(updatedIds);
+      setRows((prev) =>
+        prev.map((r) =>
+          updatedSet.has(r.id)
+            ? ({
+                ...r,
+                ...(patch as Partial<ArtworkListRow>),
+                updated_at: new Date().toISOString(),
+              } as ArtworkListRow)
+            : r,
+        ),
+      );
+    }
+    // 2. Clear selection so the action bar collapses.
     clearSelection();
+    // 3. Sync server-side too, so any aggregate counts / filters elsewhere
+    //    on the page stay consistent. The grid's local state ignores
+    //    refreshed initialRows (deliberately — see the filter-change
+    //    effect above), so this is purely a background sync.
     router.refresh();
-    // (The grid re-renders with whatever the server returned. For users
-    //  who haven't scrolled past the first batch, this is fully consistent.
-    //  Lazy-loaded batches will update on next load.)
-    void updatedIds;
   }
 
   if (rows.length === 0) {
@@ -266,7 +288,13 @@ export function ArtworkGrid({
                 <div className="bg-paper-2 aspect-square overflow-hidden border border-current/20 group-hover:border-current/60 transition-colors">
                   <ArtworkThumb
                     artworkId={r.id}
-                    hasImage={r.primary_image_id != null}
+                    // Match the resolution order used by /api/work-image and
+                    // the detail-page hero: any image counts. Gating strictly on
+                    // primary_image_id hid rows that had images but no primary
+                    // pointer set (multi-source import path doesn't always
+                    // backfill primary_image_id), which is the bug Raghava hit
+                    // after batch-marking artworks sold and inspecting them.
+                    hasImage={r.primary_image_id != null || r.image_count > 0}
                     cacheKey={r.updated_at}
                     className="group-hover:scale-[1.02] transition-transform duration-300"
                   />

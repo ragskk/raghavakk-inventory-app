@@ -1,8 +1,15 @@
-import { openDbForRead, runDbWrite } from "@/lib/db";
+import {
+  openDbForRead,
+  runDbWrite,
+  writeDataRepoFile,
+  readDataRepoFile
+} from "@/lib/db";
 import {
   type CreateArtworkInput,
   type UpdateArtworkPatch,
+  type BulkUpdateArtworkPatch,
   type ListArtworksQuery,
+  BULK_ALLOWED_FIELDS,
   INVENTORY_NUMBER_RE
 } from "@/lib/validation/artwork";
 
@@ -701,6 +708,32 @@ export async function updateArtwork(
 /**
  * Apply the same patch to many artworks in a single Octokit commit.
  *
+ * Two safeguards (locked 2026-05-17):
+ *
+ *   1. **Field allowlist.** Only BULK_ALLOWED_FIELDS may be patched here.
+ *      The API route enforces this via BulkUpdateArtworkPatch, but we
+ *      re-check at the DB layer so this function is safe even if called
+ *      directly. Identity columns (slug, inventory_number, series_id),
+ *      archive metadata, and primary_image_id are not reachable through
+ *      this surface — they require the single-artwork PATCH or dedicated
+ *      endpoints.
+ *
+ *   2. **Pre-write snapshot.** Before the SET runs, we capture the full
+ *      prior state of every affected row to
+ *      `backups/bulk/<iso>-<count>rows.json` in the data repo. That file
+ *      is the revert source for scripts/revert-bulk.ts. The snapshot
+ *      includes:
+ *        - { ts, actor, patch, ids }                  (header)
+ *        - { rows: ArtworkRow[] }                     (full prior state)
+ *      We snapshot the whole row, not just the patched fields, so a
+ *      future "restore everything" revert is unambiguous and we keep an
+ *      audit trail of values that weren't touched at all.
+ *
+ * The snapshot is written OUTSIDE runDbWrite. If runDbWrite then fails or
+ * retries, the snapshot is unchanged — at worst it's an orphan audit
+ * entry of "we intended to touch these rows; here's what they looked
+ * like." Better an orphan snapshot than no snapshot if the write blew up.
+ *
  * Skips artworks that don't exist or are archived (returned in `skipped`).
  * Atomicity: every update happens inside ONE runDbWrite callback, so
  * either all UPDATEs land or none do (OCC retry re-runs the whole batch).
@@ -708,14 +741,23 @@ export async function updateArtwork(
 export interface BulkUpdateResult {
   updated_ids: number[];
   skipped: { id: number; reason: string }[];
+  snapshot_path: string | null;
 }
+
+export interface BulkUpdateContext {
+  /** signed-in operator email — written into the snapshot header */
+  actor?: string | null;
+}
+
+const BULK_ALLOWED_SET: ReadonlySet<string> = new Set(BULK_ALLOWED_FIELDS);
 
 export async function bulkUpdateArtworks(
   ids: number[],
-  patch: UpdateArtworkPatch
+  patch: BulkUpdateArtworkPatch,
+  ctx: BulkUpdateContext = {}
 ): Promise<BulkUpdateResult> {
   if (ids.length === 0) {
-    return { updated_ids: [], skipped: [] };
+    return { updated_ids: [], skipped: [], snapshot_path: null };
   }
   const patchKeys = Object.keys(patch).filter(
     (k) => (patch as Record<string, unknown>)[k] !== undefined
@@ -723,8 +765,54 @@ export async function bulkUpdateArtworks(
   if (patchKeys.length === 0) {
     throw new Error("bulkUpdateArtworks: empty patch");
   }
+  // Belt-and-suspenders allowlist check at the DB layer. The API route's
+  // BulkUpdateArtworkPatch already rejects forbidden keys, but if some
+  // future caller wires this function up directly we still want the guard.
+  for (const k of patchKeys) {
+    if (!BULK_ALLOWED_SET.has(k)) {
+      throw new Error(
+        `bulkUpdateArtworks: field "${k}" is not in BULK_ALLOWED_FIELDS`
+      );
+    }
+  }
 
-  return runDbWrite<BulkUpdateResult>(
+  // ---------------------------------------------------------------
+  // 1. Snapshot the prior state of the affected rows.
+  // ---------------------------------------------------------------
+  const prior = await readArtworksByIds(ids);
+  const snapshotTs = new Date().toISOString().replace(/[:.]/g, "-");
+  const snapshotPath = `backups/bulk/${snapshotTs}-${prior.length}rows.json`;
+  const snapshotPayload = {
+    version: 1,
+    kind: "bulk-update",
+    ts: new Date().toISOString(),
+    actor: ctx.actor ?? null,
+    patch,
+    requested_ids: ids,
+    rows: prior // full prior state of each row that actually exists
+  };
+  const snapshotBytes = new TextEncoder().encode(
+    JSON.stringify(snapshotPayload, null, 2)
+  );
+  try {
+    await writeDataRepoFile(
+      snapshotPath,
+      snapshotBytes,
+      `snapshot: pre-bulk ${patchKeys.join(",")} on ${prior.length} rows`
+    );
+  } catch (err) {
+    // Snapshot is the revert source. If we can't write it, refuse to run
+    // the bulk update — better to surface the error to the operator than
+    // to commit an irreversible change.
+    throw new Error(
+      `bulkUpdateArtworks: failed to write pre-bulk snapshot to ${snapshotPath}: ${String(err)}`
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // 2. Apply the patch.
+  // ---------------------------------------------------------------
+  const result = await runDbWrite<BulkUpdateResult>(
     async (db) => {
       const updated: number[] = [];
       const skipped: { id: number; reason: string }[] = [];
@@ -758,10 +846,126 @@ export async function bulkUpdateArtworks(
         updated.push(id);
       }
 
-      return { updated_ids: updated, skipped };
+      return { updated_ids: updated, skipped, snapshot_path: snapshotPath };
     },
-    `bulk update ${ids.length} artworks (${patchKeys.join(", ")})`
+    `bulk update ${ids.length} artworks (${patchKeys.join(", ")}) — snapshot at ${snapshotPath}`
   );
+
+  return result;
+}
+
+/**
+ * Read the full state of a set of artworks by id. Used for the pre-bulk
+ * snapshot — we want every column so the revert path can restore them
+ * without needing to consult anything else.
+ */
+async function readArtworksByIds(ids: number[]): Promise<ArtworkRow[]> {
+  if (ids.length === 0) return [];
+  const { db } = await openDbForRead();
+  try {
+    // sql.js doesn't accept array bindings; expand into named params.
+    const keys = ids.map((_, i) => `$id${i}`);
+    const params: Record<string, number> = {};
+    ids.forEach((v, i) => {
+      params[`$id${i}`] = v;
+    });
+    return rowsToObjects<ArtworkRow>(
+      execRows(
+        db,
+        `SELECT ${ARTWORK_SELECT} FROM artworks WHERE id IN (${keys.join(", ")})`,
+        params
+      )
+    );
+  } finally {
+    db.close();
+  }
+}
+
+// ---------------------------------------------------------------
+// Revert from a pre-bulk snapshot
+// ---------------------------------------------------------------
+
+export interface RevertResult {
+  restored_ids: number[];
+  missing_ids: number[];
+  snapshot_path: string;
+}
+
+/**
+ * Restore the rows recorded in a pre-bulk snapshot back to their prior
+ * state. Reads the JSON snapshot from `backups/bulk/<...>.json` and
+ * issues an UPDATE per row that overwrites every mutable column with the
+ * snapshotted value.
+ *
+ * Idempotent: re-running with the same snapshot is a no-op if the rows
+ * already match. Rows that no longer exist (e.g. archived after the
+ * snapshot) are reported in `missing_ids` and skipped.
+ *
+ * This is the safety net that protects every bulk operation. Run it via
+ * scripts/revert-bulk.ts.
+ */
+export async function revertBulkFromSnapshot(
+  snapshotPath: string
+): Promise<RevertResult> {
+  const bytes = await readDataRepoFile(snapshotPath);
+  if (!bytes) {
+    throw new Error(`revertBulkFromSnapshot: ${snapshotPath} not found`);
+  }
+  const text = new TextDecoder().decode(bytes);
+  let parsed: {
+    version?: number;
+    kind?: string;
+    rows?: ArtworkRow[];
+  };
+  try {
+    parsed = JSON.parse(text);
+  } catch (err) {
+    throw new Error(
+      `revertBulkFromSnapshot: invalid JSON at ${snapshotPath}: ${String(err)}`
+    );
+  }
+  if (parsed.kind !== "bulk-update" || !Array.isArray(parsed.rows)) {
+    throw new Error(
+      `revertBulkFromSnapshot: ${snapshotPath} is not a bulk-update snapshot`
+    );
+  }
+
+  const rows = parsed.rows;
+
+  // Columns we restore. We deliberately do NOT restore primary_image_id
+  // unless it was in the snapshot — and we DO NOT touch identity columns
+  // (id, inventory_number, slug, series_id, created_at). updated_at is
+  // overwritten with the snapshotted value so the revert is invisible to
+  // "what changed recently" queries.
+  const RESTORE_COLUMNS = [
+    ...BULK_ALLOWED_FIELDS,
+    "primary_image_id",
+    "updated_at"
+  ] as const;
+
+  return runDbWrite<RevertResult>(async (db) => {
+    const restored: number[] = [];
+    const missing: number[] = [];
+
+    for (const row of rows) {
+      const existing = rowsToObjects<{ id: number }>(
+        execRows(db, `SELECT id FROM artworks WHERE id = $id`, { $id: row.id })
+      );
+      if (existing.length === 0) {
+        missing.push(row.id);
+        continue;
+      }
+      const sets = RESTORE_COLUMNS.map((c) => `${c} = $${c}`).join(", ");
+      const params: Record<string, string | number | null> = { $id: row.id };
+      for (const c of RESTORE_COLUMNS) {
+        params[`$${c}`] = (row as unknown as Record<string, string | number | null>)[c];
+      }
+      db.run(`UPDATE artworks SET ${sets} WHERE id = $id`, params);
+      restored.push(row.id);
+    }
+
+    return { restored_ids: restored, missing_ids: missing, snapshot_path: snapshotPath };
+  }, `revert: restore ${rows.length} rows from ${snapshotPath}`);
 }
 
 /**

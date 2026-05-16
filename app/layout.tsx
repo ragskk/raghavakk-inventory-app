@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SessionChip } from "./_components/SessionChip";
 
 export const metadata: Metadata = {
   title: "RKK Inventory",
@@ -20,7 +21,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {/* Global sign-out chip — renders only when authenticated. */}
+        <SessionChip />
+        {children}
+      </body>
     </html>
   );
 }

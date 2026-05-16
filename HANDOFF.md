@@ -1,159 +1,132 @@
 # Handoff — RKK Inventory App
 
-Date: 2026-05-16. Supersedes the prior 2026-05-16 Session-1 handoff. **Session 2 of 9 is closed.** Code shipped and typechecks; the `_cm` → `_in` post-push fix is in (see "Post-push fix" below). Seeding the first artworks is happening in a parallel chat thread; Session 3 (series + locations + contacts + move-artwork) starts after that work lands. **Before Session 3 writes any schema changes, address the bootstrap-once trap noted at the bottom of this file.**
+Date: 2026-05-16 (Session 2.5 — seeding + image upload + UX redesign + batch ops + backup). Supersedes the prior Session-2-close handoff. Session 3 (series + locations + contacts + move-artwork action) is now what comes next.
 
-## State at end of Session 2
+## State at end of this session
 
-The artworks spine — query layer, validation, API routes, and a long-form registrar UI for create / read / update / archive — is in place behind the auth-gated `/artworks` surface. `tsc --noEmit` is clean. No live data has been written yet; the seed step and end-to-end test are queued for Raghava.
+`/artworks` is the live working surface. Production: `https://raghavakk-inventory-app.vercel.app/artworks` (root `/` now redirects there). Data repo `ragskk/raghavakk-inventory-data` holds the SQLite blob + cached image variants + (future) documents. `tsc --noEmit` clean.
 
-Carrying forward, intact from Session 1:
-- Signed in as `raghava.kk@gmail.com` via Google SSO at `https://raghavakk-inventory-app.vercel.app/`
-- Data repo `ragskk/raghavakk-inventory-data` connected, `inventory.sqlite` bootstrapped, `meta.schema_version = '1'`
-- All 19 tables created on first read; `CREATE TABLE … IF NOT EXISTS` paths on every subsequent open
+Database is seeded:
 
-## What shipped in Session 2
+| Table | Rows |
+|---|---:|
+| users | 2 (raghava.kk@gmail.com artist · raghavakkstudio@gmail.com studio_admin) |
+| mediums | 4 (acrylic on canvas, oil on canvas, hand-carved mahogany, acrylic+digital print on archival cotton rag) |
+| series | 20 (13 with works · 5 brochure-only placeholders · 2 from older Drive folder) |
+| artworks | 58 |
+| artwork_images | 67 |
+| cached image variants | 168 of 174 (2 source URLs broke: `guernica-2-0`, `to-see-or-not-to-see`) |
+
+Inventory-number ranges allocated: `RKK-TH-001..006`, `RKK-IB-001..005`, `RKK-GP-001..004`, `RKK-SM-001..006`, `RKK-CC-001..005`, `RKK-OP-001..006`, `RKK-ED-001..009`, `RKK-EC-001..003`, `RKK-TT-001`, `RKK-FS-001..005`, `RKK-IB2-001..008`. Per-series `next_seq` advanced accordingly.
+
+## What shipped this session
 
 ```
+seed-data/                                (workspace folder mirror)
+├── mediums.json                          4 rows
+├── series.json                           20 rows incl. AC/MK/RC/AG/TLG placeholders
+├── artworks.json                         58 rows · inches end-to-end
+├── users.json                            2 rows
+├── seed-artworks.ts                      idempotent · INSERT OR IGNORE + slug check
+├── verify.ts                             diagnostic · PRAGMA table_info + counts
+├── skipped.json                          17 deferred works + 12 unattached Drive files
+└── README.md
+
 lib/
-├── inventory.ts                          (extended — see "Public API" below)
-└── validation/
-    └── artwork.ts                        (NEW — Zod schemas)
+├── image-attach.ts                       NEW · sharp pipeline · 3 variants per upload
+└── inventory.ts                          extended
+    ├── listArtworkImages(artwork_id)
+    ├── listMediums()
+    └── bulkUpdateArtworks(ids, patch)    one runDbWrite, N updates, one commit
 
 app/
+├── page.tsx                              now redirect → /artworks
 ├── api/
-│   ├── artworks/
-│   │   ├── route.ts                      (GET list, POST create)
-│   │   └── [slug]/
-│   │       ├── route.ts                  (GET detail, PATCH update)
-│   │       └── archive/route.ts          (POST archive)
-│   └── series/
-│       └── route.ts                      (GET list, POST upsert — Session 2 stub)
+│   ├── artwork-images/[artwork_id]/route.ts   POST upload · multipart · any format
+│   ├── artworks/bulk/route.ts                 POST bulk update
+│   └── backup/database/route.ts               GET download inventory.sqlite
 └── artworks/
-    ├── page.tsx                          (list + filters)
-    ├── new/page.tsx                      (create — server shell)
-    ├── [slug]/page.tsx                   (detail)
-    ├── [slug]/edit/page.tsx              (edit — server shell)
-    └── _components/
-        └── ArtworkForm.tsx               (long-form, shared by create + edit)
-
-scripts/
-└── seed-fixture-series.ts                (NEW — one-shot seed for verification)
+    ├── page.tsx                          server shell · fetches first batch + series + mediums
+    ├── _components/
+    │   ├── ArtworkFilters.tsx            live filter bar · no apply button · 350ms debounce on search
+    │   ├── ArtworkGrid.tsx               image-first 4-up grid · infinite scroll · multi-select
+    │   ├── ArtworkThumb.tsx              graceful no-image / broken-image fallback
+    │   └── BatchActionBar.tsx            sticky bottom · field+value+apply
+    ├── [slug]/
+    │   ├── page.tsx                      thin server wrapper
+    │   ├── _components/
+    │   │   └── ArtworkDetail.tsx         click-to-edit · auto-save · status pills · drop zone · magazine sections
+    │   └── edit/page.tsx                 redirects → /artworks/[slug] (old form deprecated)
 ```
 
-### Public API (lib/inventory.ts)
+## Locked decisions this session
 
-```ts
-// reads
-listArtworks(filters: ListArtworksQuery): Promise<ArtworkListRow[]>
-getArtworkBySlug(slug: string): Promise<ArtworkRow | null>
-getArtworkById(id: number): Promise<ArtworkRow | null>
-listSeries(): Promise<SeriesRow[]>
+1. **Canonical unit: inches.** Studio sheet template + DB columns + JSON + UI inputs all use inches end-to-end. No conversion at any layer. `height_in / width_in / depth_in / framed_*_in`. `weight_kg` stays kg (global shipping default).
+2. **IB and IB2 are separate series rows** (acrylic-on-canvas vs acrylic+digital-print). Schema `code UNIQUE` forces the split; iteration field on each row.
+3. **Toy Trojan is one artwork, six images.** Sheet rows 11A–F collapsed to one `artworks` row, six `artwork_images` rows.
+4. **Brochure-only series (AG / TLG / AC / MK / RC) seeded as placeholder rows** so the spine exists for later population. `Anthropocene V` (work 4E) is filed under Sublime Machines; AC placeholder still exists — confirm whether to fold it.
+5. **Edges diptychs (7F, 7G) are one row each.** Stored with combined dims, `materials: "Diptych (two panels)"`, two image rows per diptych. `7F_A(1).jpg` is presumed mislabeled B panel — needs source-side rename to `7F_B.jpg`.
+6. **Bootstrap commits orphan blobs over orphan DB rows.** `image-attach.ts` commits the 3 variant blobs to the data repo BEFORE inserting the DB row, so a half-failure leaves a re-uploadable orphan path, not a broken thumb pointer.
+7. **No apply button on list filters.** Search input debounced 350ms; selects + checkbox commit immediately via `router.push`.
+8. **Infinite scroll batch size: 24.** Initial batch on server, `IntersectionObserver` 300px-from-bottom fetches next 24 via `GET /api/artworks?offset=N`.
+9. **Bulk endpoint excludes `series_id` and `inventory_number`** (immutable per `UpdateArtworkPatch` Zod schema). Series re-assignment + inventory renumbering belong in the dedicated move-artwork action — Session 3.
+10. **Auth redirect URI:** Google OAuth client has only the production alias registered. Preview-URL auth requires either registering each hash in Cloud Console OR setting `AUTH_URL=https://raghavakk-inventory-app.vercel.app` in Vercel env vars.
 
-// writes — all inside runDbWrite, OCC-safe
-createArtwork(input: CreateArtworkInput): Promise<ArtworkRow>
-updateArtwork(id: number, patch: UpdateArtworkPatch): Promise<ArtworkRow>
-archiveArtwork(id: number, reason: string): Promise<ArtworkRow>
-upsertSeriesByCode(input: {...}): Promise<SeriesRow>
-
-// session-1 carry-over (untouched)
-getArtworkPrimaryImageSourceUrl(artworkId: string)
-getSchemaVersion()
-```
-
-### Locked Session 2 decisions
-
-1. **Required-on-create matches schema NOT NULL exactly.** `series_id`, `title`, `year_start`, `height_cm`, `width_cm`. Everything else optional. Lets Sonia create stubs fast during migration; richer validation deferred to a "ready to publish" check in Session 9.
-2. **Slug auto-derived from `kebab(title)-{series_code}-{NNN}[-eN|-apN]`.** SEO-friendly, predictable, collision-walked with `-2`, `-3` suffix inside the same transaction. Title changes do NOT auto-update slug — link stability wins.
-3. **`inventory_number` is normally auto-generated** via `UPDATE series SET next_seq = next_seq + 1 RETURNING next_seq` inside the `runDbWrite` callback (atomic, idempotent across OCC retries). Override field on the create form accepts a hand-allocated number; validated against `INVENTORY_NUMBER_RE` and against the series's `code`. Override path does NOT advance `next_seq` — that's the importer's job (Session 4) when seeding from pre-existing inventory.
-4. **Form layout: long-form one-page** (the HANDOFF default). Stepped flow can be added later without changing the API.
-5. **Soft-delete only.** `is_archived` flag + reason + timestamp; archive cascades `availability_status` to `withdrawn`. No hard-delete UI in v1.
-6. **`series_id` and `inventory_number` are immutable on update.** Re-categorising = archive + new. The Zod patch schema excludes both fields.
-
-### Verified
-
-- `npx tsc --noEmit` exits 0 on a clean run. All types resolve.
-- `app/page.tsx` (Session 1 heartbeat) untouched; `meta.schema_version` round-trip still healthy.
-
-### Post-push fix — unit mismatch (2026-05-16)
-
-After the initial Session 2 push, `/artworks` threw `no such column: a.height_cm` at runtime. Cause: the canonical schema in the code repo uses `_in` (inches, per the explicit "canonical unit" comment in `schema.sql`), but Session 2 code was written against the stale planning-folder `schema.sql` which had `_cm`. Fix: renamed all column references in `lib/inventory.ts`, `lib/validation/artwork.ts`, `app/artworks/_components/ArtworkForm.tsx`, and `app/artworks/[slug]/page.tsx` from `_cm` to `_in` (height / width / depth / framed_* — `weight_kg` stays kg). UI labels updated to "(in)". No DB migration needed since the live schema was already correct. `tsc --noEmit` clean post-fix.
-
-Sibling hygiene: the planning-folder `schema.sql` at `Art inventory app/schema.sql` is stale (has `_cm`) and contradicts the canonical one in this repo. Delete or update separately to prevent the same trap.
-
-### NOT verified (Raghava's local-run checklist)
-
-This needs to happen on the Mac with the live `GITHUB_TOKEN`. The sandbox can't run a full `next build` within its time budget, and writing to the live `raghavakk-inventory-data` repo from the sandbox is the wrong shape regardless.
+## Pending commits (not yet pushed)
 
 ```
-# 0. (recommended) take a backup tag of the data repo first
-#    in raghavakk-inventory-data/, on Mac terminal:
-#    git tag raghavakk-inventory-data.backup-2026-05-16-pre-session-2-seed
-#    git push origin --tags
+?? app/api/backup/                         GET /api/backup/database — sqlite download endpoint
+```
 
-# 1. seed the fixture series — idempotent, safe to re-run
+To ship:
+```
 cd "/Users/raghavakalyanaraman/Documents/Claude/Projects/The New Raghava KK Website/raghavakk-inventory-app"
-GITHUB_TOKEN=<pat> npx tsx scripts/seed-fixture-series.ts
-# Expect output:
-#   [seed] upserting series IB — The Impossible Bouquet
-#   [seed]   id=1  next_seq=1  created_at=...
-#   [seed] done — 1 series upserted.
-
-# 2. dev server + browser walkthrough
-npm run dev
-# → http://localhost:3000/artworks
-#   - list page renders (empty state with "create the first artwork" CTA)
-# → /artworks/new
-#   - dropdown shows "IB — The Impossible Bouquet (next: 1)"
-# → fill title + year_start + height + width, leave inventory # override blank
-# → submit
-#   - expect redirect to /artworks/{slug} with inventory_number = RKK-IB-001
-#   - data repo gets a commit titled
-#     `create artwork — series 1 — "<title>"`
-# → /artworks → row appears in list
-# → /artworks/{slug}/edit → change description, save
-#   - data repo gets a second commit `update artwork {id}`
-# → POST /api/artworks/{slug}/archive with body `{"reason":"smoke test"}`
-#   - third commit `archive artwork {id}`, row dimmed in list
-
-# 3. confirm Vercel deploy still green after pushing the code
-git status
-git add .
-git commit -m "session 2: artworks CRUD spine + minimal UI"
-git push origin main
-# → wait for Vercel build, then visit raghavakk-inventory-app.vercel.app/artworks
+git add app/api/backup/
+git commit -m "feat: download inventory.sqlite as backup"
+git push
 ```
 
-If `next build` fails on a route Raghava hits in dev, the error will appear in the terminal — that's the second-pass typecheck the sandbox couldn't run.
+Direct download URL (once deployed): `https://raghavakk-inventory-app.vercel.app/api/backup/database` — auth-gated, streams the live blob with filename `rkk-inventory-YYYY-MM-DD.sqlite`.
 
-## Known limitations Session 2 leaves for later
+Quick polish item: add a "backup" link in the `/artworks` header next to "+ new" so it's discoverable. One line in `app/artworks/page.tsx`.
 
-- **No image upload yet.** The image-serve route (`/api/work-image/[artwork_id]/[variant]`) from Session 1 still works; what's missing is a `POST` that accepts a multipart upload, generates thumb/hero/label variants via sharp, commits to the data repo, and inserts an `artwork_images` row. Either Session 2.5 or rolled into Session 9 (ops polish). The detail page renders without images for now.
-- **Series CRUD is minimal.** Only `listSeries` and `upsertSeriesByCode` shipped — enough to populate the form dropdown and seed. Session 3 builds the real series management surface (edit cover image, display_order, website_visible, delete-if-empty, etc.).
-- **No locations, contacts, or move-artwork action.** Session 3.
-- **No condition / price history surfaces.** Session 8.
-- **Edit form sends nulls for cleared fields.** Confirm with Sonia that this is the desired clear-semantics (vs. omit-to-preserve). If we want both, we'd need a tri-state UI (set / clear / leave alone), which is more form than Session 2's spine warrants.
+## Known limitations Session 2.5 leaves for later
+
+- **Storage path keyed by `artwork_id`, not `image_id`.** Multiple images per artwork share one set of `images/<artwork_id>/{thumb,hero,label}.jpg` blobs — a new upload overwrites the variants of any prior image. Detail-page gallery shows the primary's thumb; non-primary slots show a metadata-only tile. Migration plan: switch new uploads to `images/<artwork_id>/<image_id>/<variant>.jpg`; update `/api/work-image` to read keyed first then fall back to flat. Worth doing before galleries become a real surface.
+- **2 broken source URLs.** `RKK-GP-003` (Guernica 2.0) and `RKK-IB-005` (To See Or Not To See) failed `cache-images.ts`. Source images were bad or moved on Drive. Re-upload via the detail-page drop zone replaces them.
+- **17 deferred artworks** in `seed-data/skipped.json`:
+  - MT 8A–D (4 works, Mysterium Tremendum) — Untitled, dims TK
+  - GV 15A (1, Gods Vs Gods) — Untitled, medium TK, dims TK
+  - PF 9A–F (6, Powerfluff Toys) — full metadata missing
+  - TF 13A–F (6, Toy Faces) — full metadata missing
+- **HEIC support is sharp-version-dependent.** sharp 0.33 bundles libheif on Vercel but some serverless layers strip it. If a HEIC upload returns "Input file contains unsupported image format", convert locally to JPEG first.
+- **Vercel hobby tier body limit ~4.5 MB.** RAW / huge TIFF uploads need a client-side downscale before POST. Not implemented yet; document or upgrade tier.
+- **`AC` placeholder vs work 4E "Anthropocene V".** Both exist. Decide: keep AC as a sibling placeholder or fold it into SM.
+- **No bulk archive flow.** Bulk endpoint patches via `UpdateArtworkPatch`; archive needs the dedicated route (captures a reason). Wire into the BatchActionBar with a reason prompt when needed.
+- **Bootstrap-once migration trap (carried over from Session 2).** `lib/db.ts` only runs `CREATE TABLE/INDEX IF NOT EXISTS`. Adding a column to an existing table won't propagate — needs a real migration step gated by `meta.schema_version`. Has to ship at the top of Session 3 before any schema change.
 
 ## Cross-cutting constraints (still apply)
 
-Unchanged from the ROADMAP. The Session 2 code follows all of them:
+- **Write idempotency.** Every write uses `runDbWrite`; counter increments via `UPDATE … RETURNING` not JS read-modify-write. `image-attach.ts` does blobs-then-DB so retries don't double-allocate.
+- **JPEG re-encode discipline.** `withMetadata()` + `chromaSubsampling: "4:4:4"`. Compression ladder mozjpeg q98→q92→q85→q78 only above 10 MB. Applied in both `cache-images.ts` and `image-attach.ts`.
+- **Git from Mac, not sandbox.** Unchanged.
+- **Backup tags before destructive changes.** Tag the data repo before any bulk operation that you'd want to roll back.
 
-- **Write idempotency.** `createArtwork`, `updateArtwork`, `archiveArtwork`, `upsertSeriesByCode` all run inside `runDbWrite` callbacks that re-read state from fresh on every retry. Counter increments use `UPDATE … RETURNING`, never JS read-modify-write. Verified by inspection.
-- **JPEG re-encode discipline.** Image upload isn't in Session 2; Session 1's `cache-images.ts` already enforces `withMetadata()` + `chromaSubsampling: "4:4:4"`. When upload lands, it must reuse the same encoder settings.
-- **Git from Mac, not sandbox.** Sandbox FS unlink quirk is unchanged. All commits happen from Raghava's terminal.
-- **Backup tags before destructive changes.** Seeding the first series is technically destructive (first write to the previously-empty `series` table). The verification checklist above includes the tag.
+## How to back up the studio data
 
-## Open questions for Session 3 / 4
+Two paths, both produce a recoverable snapshot:
 
-- **Default `display_order` strategy for series and artworks.** Currently nullable; Session 3 may want a "next available" auto-allocator. Worth deciding when we build the series form, not now.
-- **Edit-form clear semantics.** See above — if Sonia wants tri-state, we add a "leave alone" mode to the PATCH path.
-- **Edition record creation.** Schema has an `editions` table that `artworks.edition_id` references, but Session 2 doesn't create or expose it. New edition copies currently set `edition_id = null` and rely on `edition_number` / `artist_proof` / `ap_number` alone. Session 3 (or 4 during migration) needs to populate `editions` so the suffix logic stays accurate for multi-copy works.
+- **Quick download:** sign in, then `GET /api/backup/database` (browser fetches and saves `rkk-inventory-YYYY-MM-DD.sqlite`). Single-file SQLite; opens in DB Browser for SQLite, Postico, or any sqlite CLI.
+- **Full repo clone:** `git clone git@github.com:ragskk/raghavakk-inventory-data.git`. Pulls every commit: SQLite blob, all 168 cached image variants, future documents. Every change is a commit you can `git log` and `git checkout` to roll back.
 
-## Known gotchas (carried forward from Session 1)
+## What to test before Session 3
 
-1. **Sign in only from the production alias**, not from preview URLs. Unchanged.
-2. **Env vars in Vercel only apply to new deploys.** Unchanged.
-3. **`personal_access_token.txt`** was deleted 2026-05-16. Value lives in `.env.local` (dev) and Vercel encrypted env vars (prod). Don't recreate the plaintext file.
-4. **Git commits from the Mac terminal, not the sandbox.** Unchanged.
+1. `/artworks` — confirm grid renders 58 cards with thumbs. Two cards (`guernica-2-0`, `to-see-or-not-to-see`) should show "broken image" in red.
+2. Click a checkbox on 2–3 cards → bottom bar appears → set `availability_status` to `sold` → apply → cards turn rose.
+3. Click any artwork → detail page reads like magazine numbered sections (§ I Dimensions through § VII Meta) → click any field value → input appears → type → Tab/Enter → ticker says "saved".
+4. Click an availability pill → menu → pick new status → ticker says "saved".
+5. Drop a JPEG into the drop zone of a broken-image artwork → variants commit → primary thumb updates.
+6. Backup endpoint: visit `/api/backup/database` → file downloads with today's date.
 
 ## How to start Session 3
 
@@ -162,16 +135,9 @@ cd "/Users/raghavakalyanaraman/Documents/Claude/Projects/The New Raghava KK Webs
 npm run dev
 ```
 
-Open `localhost:3000/artworks`, confirm Session 2 spine works end-to-end (a few real artworks created via the UI is a stronger smoke test than the single fixture). Then say "let's do Session 3" and we'll start on series + locations + contacts + the move-artwork action.
+Session 3 scope per ROADMAP: series + locations + contacts + move-artwork action. The bootstrap-once trap is a prerequisite — bump `meta.schema_version` to 2 and add an explicit migration step in `lib/db.ts` before adding any column.
 
-If anything in Session 2 misbehaves before Session 3 starts: check `lib/inventory.ts` (query layer), `lib/validation/artwork.ts` (boundary contract), and `app/artworks/_components/ArtworkForm.tsx` (the only client component). The API routes are thin and shouldn't be the failure mode.
-
-## Prerequisites for Session 3 (handle before any new schema work)
-
-**1. Bootstrap-once trap.** The current `lib/db.ts` only ever runs `CREATE TABLE/INDEX IF NOT EXISTS`. If `schema.sql` adds a new column to an existing table, the live DB will not pick it up — `IF NOT EXISTS` is no-op when the table is already there. We dodged this in Session 2 only because the live schema and the new code happened to match after the fix. Session 3 adds tables that already exist in `schema.sql` (locations, location_history, contacts) — `IF NOT EXISTS` covers those because they're new tables, not new columns. But the moment we ever add a column to `artworks`, `series`, etc., we hit silent breakage at query time.
-
-Fix to ship at the top of Session 3: add a real migration step in `lib/db.ts` gated by `meta.schema_version`. Bump from 1 to 2 only when we have something to migrate; for now, the scaffolding plus a comment block documenting the pattern is enough. Use `ALTER TABLE ADD COLUMN` for additive changes; explicit table rebuilds (CREATE new + INSERT SELECT + DROP old + RENAME) for destructive ones.
-
-**2. Stale planning-folder `schema.sql`.** The file at `Art inventory app/schema.sql` (outside the code repo, in the planning folder) has the old `_cm` column names. This is what fooled me into writing `_cm` in Session 2 code. Either delete that whole planning folder (its purpose ended at Session 0) or update its `schema.sql` to match the canonical one in the code repo. Don't leave both versions sitting around.
-
-**3. Seeding state.** First artworks are being loaded via a parallel chat thread before Session 3 starts. Session 3 should open by reading the current state of `series`, `artworks`, and any location data already in the DB before generating any UI — what's there decides which series CRUD ergonomics matter first.
+Also queued for early Session 3:
+- Per-image storage paths (image_id-keyed) before non-primary galleries become real surfaces.
+- Resolve AC placeholder vs SM-folded decision.
+- Wire backup link into header (5-minute UI polish).

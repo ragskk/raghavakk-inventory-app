@@ -611,6 +611,86 @@ function StatusPill({
 }
 
 /* ============================================================================
+ * Strip thumbnail
+ *
+ * The data repo stores only ONE canonical thumb per artwork (keyed by
+ * artwork_id + variant), not per artwork_images.id. Per-image blobs are
+ * a deferred refactor — see raghavakk_inventory_bulk_safeguards.md.
+ *
+ * Resolution order, in order of preference:
+ *   1. The artwork's canonical /api/work-image/<id>/thumb. That route
+ *      falls back from data-repo blob → artwork-level source_url, so it
+ *      works whether the artwork was uploaded through the app or
+ *      imported from Drive. Same blob serves every strip entry — the
+ *      primary is still distinguished by its red border.
+ *   2. If that 404s AND this specific row has its own source_url, use
+ *      it directly (Drive lh3 URLs accept a width hint).
+ *   3. Otherwise show the metadata placeholder.
+ *
+ * Putting the canonical thumb first means every strip entry has a real
+ * thumbnail in the common case, instead of falling to placeholders
+ * whenever source_url happens to be null (app uploads, post-backfill).
+ * ========================================================================= */
+
+function StripThumb({
+  artworkId,
+  image,
+  cacheKey,
+}: {
+  artworkId: number;
+  image: ArtworkImageRow;
+  cacheKey?: string | number | null;
+}) {
+  const [canonicalBroken, setCanonicalBroken] = useState(false);
+  const [sourceBroken, setSourceBroken] = useState(false);
+
+  const canonicalUrl =
+    `/api/work-image/${artworkId}/thumb` +
+    (cacheKey ? `?v=${encodeURIComponent(String(cacheKey))}` : "");
+
+  if (!canonicalBroken) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={canonicalUrl}
+        alt={image.alt_text || ""}
+        loading="lazy"
+        decoding="async"
+        onError={() => setCanonicalBroken(true)}
+        className="object-cover w-full h-full"
+      />
+    );
+  }
+
+  const src = image.source_url;
+  if (src && !sourceBroken) {
+    const url = /lh3\.googleusercontent\.com/i.test(src)
+      ? src.replace(/=w\d+(-h\d+)?$/, "") + "=w400"
+      : src;
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={url}
+        alt={image.alt_text || ""}
+        loading="lazy"
+        decoding="async"
+        onError={() => setSourceBroken(true)}
+        className="object-cover w-full h-full"
+      />
+    );
+  }
+
+  return (
+    <div className="w-full h-full bg-paper-2 flex items-center justify-center text-center px-1">
+      <span className="font-mono text-[10px] text-muted leading-tight">
+        {image.image_type}
+        <br />#{image.id}
+      </span>
+    </div>
+  );
+}
+
+/* ============================================================================
  * Main component
  * ========================================================================= */
 
@@ -780,23 +860,13 @@ export function ArtworkDetail({
                       (isPrimary ? "border-[var(--red)]" : "border-current/30")
                     }
                   >
-                    {isPrimary ? (
-                      <div className="w-full aspect-square">
-                        <ArtworkThumb
-                          artworkId={artwork.id}
-                          variant="thumb"
-                          hasImage
-                          cacheKey={artwork.updated_at}
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-full aspect-square bg-paper-2 flex items-center justify-center text-center px-1">
-                        <span className="font-mono text-[10px] text-muted leading-tight">
-                          {img.image_type}
-                          <br />#{img.id}
-                        </span>
-                      </div>
-                    )}
+                    <div className="w-full aspect-square">
+                      <StripThumb
+                        artworkId={artwork.id}
+                        image={img}
+                        cacheKey={artwork.updated_at}
+                      />
+                    </div>
                   </figure>
                 );
               })

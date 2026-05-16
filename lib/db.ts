@@ -323,3 +323,106 @@ export async function runDbWrite<T>(
 export function invalidateDbCache(): void {
   cached = null;
 }
+
+// ---------------------------------------------------------------------------
+// Data-repo file helpers (non-DB blobs: backups, manifests, etc.)
+// ---------------------------------------------------------------------------
+
+/**
+ * Write an arbitrary file to the data repo. Used for pre-bulk snapshots
+ * (lib/inventory.ts bulkUpdateArtworks) and any other audit artefact that
+ * lives alongside the sqlite blob.
+ *
+ * Path is repo-relative ("backups/bulk/2026-05-17T12-34-56Z.json"). If
+ * the file already exists at that path, the write overwrites in place —
+ * callers should choose unique paths (timestamps) when they want a new
+ * audit entry.
+ *
+ * Returns the resulting content sha.
+ */
+export async function writeDataRepoFile(
+  path: string,
+  bytes: Uint8Array,
+  message: string
+): Promise<string> {
+  const ok = getOctokit();
+  let existingSha: string | undefined;
+  try {
+    const res = await ok.repos.getContent({
+      owner: OWNER,
+      repo: REPO,
+      path,
+      ref: BRANCH
+    });
+    if (!Array.isArray(res.data) && "sha" in res.data) {
+      existingSha = (res.data as { sha: string }).sha;
+    }
+  } catch (err) {
+    const status = (err as { status?: number })?.status;
+    if (status !== 404) throw err;
+  }
+  const params: Parameters<typeof ok.repos.createOrUpdateFileContents>[0] = {
+    owner: OWNER,
+    repo: REPO,
+    path,
+    message,
+    content: Buffer.from(bytes).toString("base64"),
+    branch: BRANCH
+  };
+  if (existingSha) params.sha = existingSha;
+  const res = await ok.repos.createOrUpdateFileContents(params);
+  const sha = res.data.content?.sha;
+  if (!sha) throw new Error("writeDataRepoFile: commit succeeded but no sha");
+  return sha;
+}
+
+/**
+ * Read an arbitrary file from the data repo. Returns null on 404.
+ */
+export async function readDataRepoFile(
+  path: string
+): Promise<Uint8Array | null> {
+  const ok = getOctokit();
+  try {
+    const res = await ok.repos.getContent({
+      owner: OWNER,
+      repo: REPO,
+      path,
+      ref: BRANCH
+    });
+    if (Array.isArray(res.data)) return null;
+    const data = res.data as { type: string; content?: string };
+    if (data.type !== "file" || !data.content) return null;
+    return new Uint8Array(Buffer.from(data.content, "base64"));
+  } catch (err) {
+    const status = (err as { status?: number })?.status;
+    if (status === 404) return null;
+    throw err;
+  }
+}
+
+/**
+ * List files in a directory of the data repo (one level deep). Used by
+ * the revert script to enumerate available snapshots.
+ */
+export async function listDataRepoDir(
+  path: string
+): Promise<{ name: string; path: string; sha: string; size: number }[]> {
+  const ok = getOctokit();
+  try {
+    const res = await ok.repos.getContent({
+      owner: OWNER,
+      repo: REPO,
+      path,
+      ref: BRANCH
+    });
+    if (!Array.isArray(res.data)) return [];
+    return res.data
+      .filter((e) => e.type === "file")
+      .map((e) => ({ name: e.name, path: e.path, sha: e.sha, size: e.size }));
+  } catch (err) {
+    const status = (err as { status?: number })?.status;
+    if (status === 404) return [];
+    throw err;
+  }
+}

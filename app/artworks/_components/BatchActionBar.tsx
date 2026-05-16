@@ -33,7 +33,15 @@ interface Props {
   selectedIds: number[];
   mediums: MediumRow[];
   onClear: () => void;
-  onApplied: (updatedIds: number[]) => void;
+  /**
+   * Called once the bulk write has committed server-side. The parent
+   * merges the patch into local row state so the user sees the new
+   * values without waiting for a full server refetch.
+   */
+  onApplied: (
+    updatedIds: number[],
+    patch: Record<string, string | number | boolean | null>,
+  ) => void;
 }
 
 export function BatchActionBar({
@@ -184,7 +192,7 @@ export function BatchActionBar({
           ? ` · skipped ${skipped.length} (${skipped[0].reason}${skipped.length > 1 ? "…" : ""})`
           : "";
       setMsg(`updated ${updated.length}${skippedSummary}`);
-      onApplied(updated);
+      onApplied(updated, patch as Record<string, string | number | boolean | null>);
     } catch (e) {
       setErr(String(e instanceof Error ? e.message : e));
     } finally {

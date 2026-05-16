@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { UpdateArtworkPatch } from "@/lib/validation/artwork";
+import { BulkUpdateArtworkPatch } from "@/lib/validation/artwork";
 import { bulkUpdateArtworks } from "@/lib/inventory";
 
 /**
@@ -9,18 +9,24 @@ import { bulkUpdateArtworks } from "@/lib/inventory";
  *
  * Apply the same partial update to many artworks in one commit.
  *
- *   body: { ids: number[], patch: UpdateArtworkPatch }
+ *   body: { ids: number[], patch: BulkUpdateArtworkPatch }
  *
- * Series / inventory_number remain immutable (UpdateArtworkPatch schema
- * already excludes them). Archived artworks are skipped and reported in
- * the response.
+ * BulkUpdateArtworkPatch is stricter than UpdateArtworkPatch — it rejects
+ * any field outside BULK_ALLOWED_FIELDS (primary_image_id, slug,
+ * inventory_number, series_id, archive metadata). Single-artwork PATCH
+ * still accepts the full set; bulk doesn't.
+ *
+ * Archived artworks are skipped and reported in the response. Every bulk
+ * call snapshots affected rows to backups/bulk/<timestamp>.json in the
+ * data repo BEFORE applying the SET — that file is the revert source
+ * (see scripts/revert-bulk.ts).
  */
 
 export const dynamic = "force-dynamic";
 
 const BulkBody = z.object({
   ids: z.array(z.number().int().positive()).min(1).max(500),
-  patch: UpdateArtworkPatch,
+  patch: BulkUpdateArtworkPatch,
 });
 
 export async function POST(req: Request) {
@@ -45,7 +51,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await bulkUpdateArtworks(parsed.data.ids, parsed.data.patch);
+    const result = await bulkUpdateArtworks(
+      parsed.data.ids,
+      parsed.data.patch,
+      { actor: session.user.email },
+    );
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {
     console.error("bulkUpdateArtworks failed:", err);
