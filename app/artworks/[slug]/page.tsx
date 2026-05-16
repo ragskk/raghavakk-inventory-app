@@ -107,17 +107,17 @@ export default async function ArtworkDetailPage({ params }: PageProps) {
           <h2 className="eyebrow mb-2">dimensions</h2>
           <dl>
             {dl(
-              "size (cm)",
-              `${artwork.height_cm} × ${artwork.width_cm}${
-                artwork.depth_cm ? ` × ${artwork.depth_cm}` : ""
+              "size (in)",
+              `${artwork.height_in} × ${artwork.width_in}${
+                artwork.depth_in ? ` × ${artwork.depth_in}` : ""
               }`
             )}
-            {artwork.framed_height_cm && artwork.framed_width_cm
+            {artwork.framed_height_in && artwork.framed_width_in
               ? dl(
-                  "framed (cm)",
-                  `${artwork.framed_height_cm} × ${artwork.framed_width_cm}${
-                    artwork.framed_depth_cm
-                      ? ` × ${artwork.framed_depth_cm}`
+                  "framed (in)",
+                  `${artwork.framed_height_in} × ${artwork.framed_width_in}${
+                    artwork.framed_depth_in
+                      ? ` × ${artwork.framed_depth_in}`
                       : ""
                   }`
                 )

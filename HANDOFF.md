@@ -1,6 +1,6 @@
 # Handoff — RKK Inventory App
 
-Date: 2026-05-16. Supersedes the prior 2026-05-16 Session-1 handoff. **Session 2 of 9 is code-complete and typechecks; awaiting Raghava's live end-to-end verification.** Session 3 (series + locations + contacts + move-artwork) is unblocked.
+Date: 2026-05-16. Supersedes the prior 2026-05-16 Session-1 handoff. **Session 2 of 9 is closed.** Code shipped and typechecks; the `_cm` → `_in` post-push fix is in (see "Post-push fix" below). Seeding the first artworks is happening in a parallel chat thread; Session 3 (series + locations + contacts + move-artwork) starts after that work lands. **Before Session 3 writes any schema changes, address the bootstrap-once trap noted at the bottom of this file.**
 
 ## State at end of Session 2
 
@@ -73,6 +73,12 @@ getSchemaVersion()
 
 - `npx tsc --noEmit` exits 0 on a clean run. All types resolve.
 - `app/page.tsx` (Session 1 heartbeat) untouched; `meta.schema_version` round-trip still healthy.
+
+### Post-push fix — unit mismatch (2026-05-16)
+
+After the initial Session 2 push, `/artworks` threw `no such column: a.height_cm` at runtime. Cause: the canonical schema in the code repo uses `_in` (inches, per the explicit "canonical unit" comment in `schema.sql`), but Session 2 code was written against the stale planning-folder `schema.sql` which had `_cm`. Fix: renamed all column references in `lib/inventory.ts`, `lib/validation/artwork.ts`, `app/artworks/_components/ArtworkForm.tsx`, and `app/artworks/[slug]/page.tsx` from `_cm` to `_in` (height / width / depth / framed_* — `weight_kg` stays kg). UI labels updated to "(in)". No DB migration needed since the live schema was already correct. `tsc --noEmit` clean post-fix.
+
+Sibling hygiene: the planning-folder `schema.sql` at `Art inventory app/schema.sql` is stale (has `_cm`) and contradicts the canonical one in this repo. Delete or update separately to prevent the same trap.
 
 ### NOT verified (Raghava's local-run checklist)
 
@@ -159,3 +165,13 @@ npm run dev
 Open `localhost:3000/artworks`, confirm Session 2 spine works end-to-end (a few real artworks created via the UI is a stronger smoke test than the single fixture). Then say "let's do Session 3" and we'll start on series + locations + contacts + the move-artwork action.
 
 If anything in Session 2 misbehaves before Session 3 starts: check `lib/inventory.ts` (query layer), `lib/validation/artwork.ts` (boundary contract), and `app/artworks/_components/ArtworkForm.tsx` (the only client component). The API routes are thin and shouldn't be the failure mode.
+
+## Prerequisites for Session 3 (handle before any new schema work)
+
+**1. Bootstrap-once trap.** The current `lib/db.ts` only ever runs `CREATE TABLE/INDEX IF NOT EXISTS`. If `schema.sql` adds a new column to an existing table, the live DB will not pick it up — `IF NOT EXISTS` is no-op when the table is already there. We dodged this in Session 2 only because the live schema and the new code happened to match after the fix. Session 3 adds tables that already exist in `schema.sql` (locations, location_history, contacts) — `IF NOT EXISTS` covers those because they're new tables, not new columns. But the moment we ever add a column to `artworks`, `series`, etc., we hit silent breakage at query time.
+
+Fix to ship at the top of Session 3: add a real migration step in `lib/db.ts` gated by `meta.schema_version`. Bump from 1 to 2 only when we have something to migrate; for now, the scaffolding plus a comment block documenting the pattern is enough. Use `ALTER TABLE ADD COLUMN` for additive changes; explicit table rebuilds (CREATE new + INSERT SELECT + DROP old + RENAME) for destructive ones.
+
+**2. Stale planning-folder `schema.sql`.** The file at `Art inventory app/schema.sql` (outside the code repo, in the planning folder) has the old `_cm` column names. This is what fooled me into writing `_cm` in Session 2 code. Either delete that whole planning folder (its purpose ended at Session 0) or update its `schema.sql` to match the canonical one in the code repo. Don't leave both versions sitting around.
+
+**3. Seeding state.** First artworks are being loaded via a parallel chat thread before Session 3 starts. Session 3 should open by reading the current state of `series`, `artworks`, and any location data already in the DB before generating any UI — what's there decides which series CRUD ergonomics matter first.

@@ -93,8 +93,8 @@ export const CreateArtworkInput = z
     series_id: z.number().int().positive(),
     title: z.string().min(1).max(500).transform((s) => s.trim()),
     year_start: z.number().int().min(1900).max(2100),
-    height_cm: z.number().positive(),
-    width_cm: z.number().positive(),
+    height_in: z.number().positive(),
+    width_in: z.number().positive(),
 
     // optional inventory-number override (validated against INVENTORY_NUMBER_RE)
     inventory_number_override: z
@@ -114,10 +114,10 @@ export const CreateArtworkInput = z
     year_end: optionalNullableInt,
     medium_id: optionalNullableInt,
     materials: optionalNullableString,
-    depth_cm: optionalNullableNum,
-    framed_height_cm: optionalNullableNum,
-    framed_width_cm: optionalNullableNum,
-    framed_depth_cm: optionalNullableNum,
+    depth_in: optionalNullableNum,
+    framed_height_in: optionalNullableNum,
+    framed_width_in: optionalNullableNum,
+    framed_depth_in: optionalNullableNum,
     weight_kg: optionalNullableNum,
 
     // descriptions
@@ -190,12 +190,12 @@ export const UpdateArtworkPatch = z
     medium_id: optionalNullableInt,
     materials: optionalNullableString,
 
-    height_cm: z.number().positive().optional(),
-    width_cm: z.number().positive().optional(),
-    depth_cm: optionalNullableNum,
-    framed_height_cm: optionalNullableNum,
-    framed_width_cm: optionalNullableNum,
-    framed_depth_cm: optionalNullableNum,
+    height_in: z.number().positive().optional(),
+    width_in: z.number().positive().optional(),
+    depth_in: optionalNullableNum,
+    framed_height_in: optionalNullableNum,
+    framed_width_in: optionalNullableNum,
+    framed_depth_in: optionalNullableNum,
     weight_kg: optionalNullableNum,
 
     short_description: optionalNullableString,

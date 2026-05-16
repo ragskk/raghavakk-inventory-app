@@ -16,7 +16,7 @@ import type { ArtworkRow, SeriesRow } from "@/lib/inventory";
  *
  * Long-form one-page layout (the HANDOFF's recommended default; can be
  * swapped for a stepped flow in a later session without changing the API).
- * Schema-minimum required: series, title, year_start, height_cm, width_cm.
+ * Schema-minimum required: series, title, year_start, height_in, width_in.
  * Everything else optional.
  *
  * Submit posts JSON to /api/artworks (create) or PATCHes
@@ -93,12 +93,12 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
       title: strOrNull(fd.get("title")),
       year_start: intOrNull(fd.get("year_start")),
       year_end: intOrNull(fd.get("year_end")),
-      height_cm: numOrNull(fd.get("height_cm")),
-      width_cm: numOrNull(fd.get("width_cm")),
-      depth_cm: numOrNull(fd.get("depth_cm")),
-      framed_height_cm: numOrNull(fd.get("framed_height_cm")),
-      framed_width_cm: numOrNull(fd.get("framed_width_cm")),
-      framed_depth_cm: numOrNull(fd.get("framed_depth_cm")),
+      height_in: numOrNull(fd.get("height_in")),
+      width_in: numOrNull(fd.get("width_in")),
+      depth_in: numOrNull(fd.get("depth_in")),
+      framed_height_in: numOrNull(fd.get("framed_height_in")),
+      framed_width_in: numOrNull(fd.get("framed_width_in")),
+      framed_depth_in: numOrNull(fd.get("framed_depth_in")),
       weight_kg: numOrNull(fd.get("weight_kg")),
       materials: strOrNull(fd.get("materials")),
       short_description: strOrNull(fd.get("short_description")),
@@ -288,15 +288,15 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
         </Field>
       </Section>
 
-      <Section title="dimensions (cm)" full>
+      <Section title="dimensions (in)" full>
         <Field label="height *">
           <input
             type="number"
             step="0.01"
-            name="height_cm"
+            name="height_in"
             required
             min={0}
-            defaultValue={v?.height_cm ?? ""}
+            defaultValue={v?.height_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>
@@ -304,10 +304,10 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
           <input
             type="number"
             step="0.01"
-            name="width_cm"
+            name="width_in"
             required
             min={0}
-            defaultValue={v?.width_cm ?? ""}
+            defaultValue={v?.width_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>
@@ -315,9 +315,9 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
           <input
             type="number"
             step="0.01"
-            name="depth_cm"
+            name="depth_in"
             min={0}
-            defaultValue={v?.depth_cm ?? ""}
+            defaultValue={v?.depth_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>
@@ -325,9 +325,9 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
           <input
             type="number"
             step="0.01"
-            name="framed_height_cm"
+            name="framed_height_in"
             min={0}
-            defaultValue={v?.framed_height_cm ?? ""}
+            defaultValue={v?.framed_height_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>
@@ -335,9 +335,9 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
           <input
             type="number"
             step="0.01"
-            name="framed_width_cm"
+            name="framed_width_in"
             min={0}
-            defaultValue={v?.framed_width_cm ?? ""}
+            defaultValue={v?.framed_width_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>
@@ -345,9 +345,9 @@ export function ArtworkForm({ mode, series, artwork }: Props) {
           <input
             type="number"
             step="0.01"
-            name="framed_depth_cm"
+            name="framed_depth_in"
             min={0}
-            defaultValue={v?.framed_depth_cm ?? ""}
+            defaultValue={v?.framed_depth_in ?? ""}
             className="w-full border border-current bg-transparent px-2 py-1"
           />
         </Field>

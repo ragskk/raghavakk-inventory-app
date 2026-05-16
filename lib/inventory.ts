@@ -44,12 +44,12 @@ export interface ArtworkRow {
   medium_id: number | null;
   materials: string | null;
 
-  height_cm: number;
-  width_cm: number;
-  depth_cm: number | null;
-  framed_height_cm: number | null;
-  framed_width_cm: number | null;
-  framed_depth_cm: number | null;
+  height_in: number;
+  width_in: number;
+  depth_in: number | null;
+  framed_height_in: number | null;
+  framed_width_in: number | null;
+  framed_depth_in: number | null;
   weight_kg: number | null;
 
   short_description: string | null;
@@ -165,12 +165,12 @@ const ARTWORK_COLUMNS = [
   "year_end",
   "medium_id",
   "materials",
-  "height_cm",
-  "width_cm",
-  "depth_cm",
-  "framed_height_cm",
-  "framed_width_cm",
-  "framed_depth_cm",
+  "height_in",
+  "width_in",
+  "depth_in",
+  "framed_height_in",
+  "framed_width_in",
+  "framed_depth_in",
   "weight_kg",
   "short_description",
   "full_description",
@@ -539,8 +539,8 @@ export async function createArtwork(
       INSERT INTO artworks (
         inventory_number, series_id, edition_id, edition_number,
         artist_proof, ap_number, title, slug, year_start, year_end,
-        medium_id, materials, height_cm, width_cm, depth_cm,
-        framed_height_cm, framed_width_cm, framed_depth_cm, weight_kg,
+        medium_id, materials, height_in, width_in, depth_in,
+        framed_height_in, framed_width_in, framed_depth_in, weight_kg,
         short_description, full_description, artist_note, internal_note,
         price_usd_cents, price_inr_paise, price_visible_public, price_visible_dealer,
         availability_status, condition_status, website_visible, featured,
@@ -548,8 +548,8 @@ export async function createArtwork(
       ) VALUES (
         $inventory_number, $series_id, $edition_id, $edition_number,
         $artist_proof, $ap_number, $title, $slug, $year_start, $year_end,
-        $medium_id, $materials, $height_cm, $width_cm, $depth_cm,
-        $framed_height_cm, $framed_width_cm, $framed_depth_cm, $weight_kg,
+        $medium_id, $materials, $height_in, $width_in, $depth_in,
+        $framed_height_in, $framed_width_in, $framed_depth_in, $weight_kg,
         $short_description, $full_description, $artist_note, $internal_note,
         $price_usd_cents, $price_inr_paise, $price_visible_public, $price_visible_dealer,
         $availability_status, $condition_status, $website_visible, $featured,
@@ -570,12 +570,12 @@ export async function createArtwork(
       $year_end: input.year_end,
       $medium_id: input.medium_id,
       $materials: input.materials,
-      $height_cm: input.height_cm,
-      $width_cm: input.width_cm,
-      $depth_cm: input.depth_cm,
-      $framed_height_cm: input.framed_height_cm,
-      $framed_width_cm: input.framed_width_cm,
-      $framed_depth_cm: input.framed_depth_cm,
+      $height_in: input.height_in,
+      $width_in: input.width_in,
+      $depth_in: input.depth_in,
+      $framed_height_in: input.framed_height_in,
+      $framed_width_in: input.framed_width_in,
+      $framed_depth_in: input.framed_depth_in,
       $weight_kg: input.weight_kg,
       $short_description: input.short_description,
       $full_description: input.full_description,
