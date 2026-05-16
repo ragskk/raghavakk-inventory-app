@@ -8,8 +8,9 @@
  * Suggested location in the app repo: scripts/seed-artworks.ts
  * Adjust the JSON import paths if you move this file.
  *
- * Conversion: artworks.json stores inches (matching the studio canonical template);
- * this script converts inches → cm at write time since schema.sql uses *_cm columns.
+ * Canonical unit: inches. The Google Sheet template, artworks.json, and the DB
+ * schema (height_in / width_in / depth_in) all use inches end-to-end. No
+ * conversion happens at any layer.
  *
  * Inventory numbering: RKK-{code}-{NNN}, allocated atomically inside runDbWrite()
  * via UPDATE…RETURNING on series.next_seq. Per the SQLite-over-Octokit OCC pattern,
@@ -18,41 +19,79 @@
  * the seed against an already-populated DB doesn't advance next_seq.
  *
  * Run:
- *   npx tsx scripts/seed-artworks.ts
+ *   npx tsx --env-file=.env.local seed-data/seed-artworks.ts
  */
 
+import type { Database } from 'sql.js';
 import { runDbWrite } from '../lib/db';
 import usersData from './users.json';
 import mediumsData from './mediums.json';
 import seriesData from './series.json';
 import artworksData from './artworks.json';
 
-const IN_TO_CM = 2.54;
+// ---------------------------------------------------------------------------
+// sql.js helpers
+// ---------------------------------------------------------------------------
+//
+// sql.js's Statement.run()/get() don't behave like better-sqlite3. The clean
+// way to use it is via Database.exec() (which returns result sets) and
+// Database.run() (which executes without returning rows). For row IDs and
+// change counts we have to query separately.
 
-function inToCm(v: number | null | undefined): number | null {
-  if (v === null || v === undefined) return null;
-  return Math.round(v * IN_TO_CM * 100) / 100;
+interface Row {
+  [col: string]: any;
 }
+
+/** Run an INSERT/UPDATE/DELETE with bound params; returns lastInsertRowid + changes. */
+function execWrite(
+  db: Database,
+  sql: string,
+  params: any[] = []
+): { changes: number; lastInsertRowid: number } {
+  db.run(sql, params);
+  const changes = db.getRowsModified();
+  const idRes = db.exec(`SELECT last_insert_rowid() AS id`);
+  const lastInsertRowid = (idRes[0]?.values?.[0]?.[0] as number) ?? 0;
+  return { changes, lastInsertRowid };
+}
+
+/** Run a SELECT (or RETURNING) with bound params; returns first row as object, or null. */
+function queryOne(db: Database, sql: string, params: any[] = []): Row | null {
+  const result = db.exec(sql, params);
+  if (result.length === 0 || result[0].values.length === 0) return null;
+  const cols = result[0].columns;
+  const vals = result[0].values[0];
+  const obj: Row = {};
+  for (let i = 0; i < cols.length; i++) obj[cols[i]] = vals[i];
+  return obj;
+}
+
+// ---------------------------------------------------------------------------
+// Slug + URL utilities
+// ---------------------------------------------------------------------------
 
 function slugify(s: string): string {
   return s
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '') // strip diacritics
+    .replace(/[̀-ͯ]/g, '')
     .replace(/['']/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
 
 /**
- * Drive's "lh3" CDN serves public Drive files without auth. Folder must be
- * shared "Anyone with the link → Viewer" for this to work. /api/work-image
- * fetches this URL and re-encodes into the data repo with the JPEG settings
- * from memory (withMetadata, 4:4:4 chroma, mozjpeg ladder).
+ * Drive's "lh3" CDN serves public Drive files without auth. The folder must
+ * be shared "Anyone with the link → Viewer" for this to work. /api/work-image
+ * fetches this URL and re-encodes into the data repo.
  */
 function driveUrl(fileId: string): string {
   return `https://lh3.googleusercontent.com/d/${fileId}`;
 }
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 interface Artwork {
   work_id: string;
@@ -80,6 +119,10 @@ interface Artwork {
   }>;
 }
 
+// ---------------------------------------------------------------------------
+// Seed
+// ---------------------------------------------------------------------------
+
 async function seed() {
   let usersInserted = 0;
   let mediumsInserted = 0;
@@ -91,26 +134,31 @@ async function seed() {
   await runDbWrite(async (db) => {
     // -------------------- users --------------------
     for (const u of usersData) {
-      const r = db.prepare(
+      const { changes } = execWrite(
+        db,
         `INSERT OR IGNORE INTO users (email, name, role, active)
-         VALUES (?, ?, ?, ?)`
-      ).run([u.email, u.name, u.role, u.active]);
-      if ((r as any).changes > 0) usersInserted++;
+         VALUES (?, ?, ?, ?)`,
+        [u.email, u.name, u.role, u.active]
+      );
+      if (changes > 0) usersInserted++;
     }
 
     // -------------------- mediums --------------------
     for (const m of mediumsData) {
-      const r = db.prepare(
-        `INSERT OR IGNORE INTO mediums (name, slug, category) VALUES (?, ?, ?)`
-      ).run([m.name, m.slug, m.category]);
-      if ((r as any).changes > 0) mediumsInserted++;
+      const { changes } = execWrite(
+        db,
+        `INSERT OR IGNORE INTO mediums (name, slug, category) VALUES (?, ?, ?)`,
+        [m.name, m.slug, m.category]
+      );
+      if (changes > 0) mediumsInserted++;
     }
 
     // -------------------- series (upsert) --------------------
-    // We upsert so editing descriptions in series.json and re-running picks them up.
-    // next_seq is NOT touched on conflict — it's allocated dynamically per artwork insert.
+    // Edits to series descriptions propagate. next_seq is NEVER touched on
+    // conflict — it's allocated dynamically per artwork insert.
     for (const s of seriesData) {
-      db.prepare(
+      execWrite(
+        db,
         `INSERT INTO series
            (code, slug, name, iteration, short_description, full_description,
             website_visible, display_order, next_seq)
@@ -123,17 +171,18 @@ async function seed() {
            full_description = excluded.full_description,
            website_visible = excluded.website_visible,
            display_order = excluded.display_order,
-           updated_at = datetime('now')`
-      ).run([
-        s.code,
-        s.slug,
-        s.name,
-        s.iteration ?? null,
-        s.short_description ?? null,
-        s.full_description ?? null,
-        s.website_visible ?? 0,
-        s.display_order ?? null,
-      ]);
+           updated_at = datetime('now')`,
+        [
+          s.code,
+          s.slug,
+          s.name,
+          s.iteration ?? null,
+          s.short_description ?? null,
+          s.full_description ?? null,
+          s.website_visible ?? 0,
+          s.display_order ?? null,
+        ]
+      );
       seriesUpserted++;
     }
 
@@ -141,103 +190,115 @@ async function seed() {
     for (const a of artworksData as Artwork[]) {
       const slug = slugify(a.title);
 
-      // Idempotency check — must happen BEFORE next_seq allocation.
-      const existing = db.prepare(
-        `SELECT id FROM artworks WHERE slug = ?`
-      ).get([slug]) as { id: number } | undefined;
+      // Idempotency: skip if slug exists. MUST happen before next_seq alloc.
+      const existing = queryOne(
+        db,
+        `SELECT id FROM artworks WHERE slug = ?`,
+        [slug]
+      );
       if (existing) {
         artworksSkipped++;
         continue;
       }
 
       // Resolve FKs.
-      const seriesRow = db.prepare(
-        `SELECT id FROM series WHERE code = ?`
-      ).get([a.series_code]) as { id: number } | undefined;
+      const seriesRow = queryOne(
+        db,
+        `SELECT id FROM series WHERE code = ?`,
+        [a.series_code]
+      );
       if (!seriesRow) {
         throw new Error(
           `[seed] Series code "${a.series_code}" not found (artwork ${a.work_id})`
         );
       }
 
-      const mediumRow = db.prepare(
-        `SELECT id FROM mediums WHERE slug = ?`
-      ).get([a.medium_slug]) as { id: number } | undefined;
+      const mediumRow = queryOne(
+        db,
+        `SELECT id FROM mediums WHERE slug = ?`,
+        [a.medium_slug]
+      );
       if (!mediumRow) {
         throw new Error(
           `[seed] Medium slug "${a.medium_slug}" not found (artwork ${a.work_id})`
         );
       }
 
-      // Atomically allocate inventory_number.
-      // UPDATE…RETURNING returns the *post-increment* value, so the slot we just
-      // claimed is (returned - 1). We zero-pad to 3 digits.
-      const seqRow = db.prepare(
+      // Atomic next_seq allocation via UPDATE…RETURNING.
+      const seqRow = queryOne(
+        db,
         `UPDATE series SET next_seq = next_seq + 1, updated_at = datetime('now')
          WHERE code = ?
-         RETURNING next_seq`
-      ).get([a.series_code]) as { next_seq: number };
-      const allocated = seqRow.next_seq - 1;
+         RETURNING next_seq`,
+        [a.series_code]
+      );
+      if (!seqRow) {
+        throw new Error(`[seed] Failed to allocate next_seq for ${a.series_code}`);
+      }
+      const allocated = (seqRow.next_seq as number) - 1;
       const inventoryNumber = `RKK-${a.series_code}-${String(allocated).padStart(3, '0')}`;
 
-      // Insert artwork.
-      const insertArtwork = db.prepare(
+      // Insert artwork. Dimensions are inches end-to-end.
+      const { lastInsertRowid: artworkId } = execWrite(
+        db,
         `INSERT INTO artworks (
            inventory_number, series_id, title, slug,
            year_start, year_end, medium_id, materials,
-           height_cm, width_cm, depth_cm,
+           height_in, width_in, depth_in,
            short_description, full_description, artist_note, internal_note
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          inventoryNumber,
+          seriesRow.id,
+          a.title,
+          slug,
+          a.year_start,
+          a.year_end ?? null,
+          mediumRow.id,
+          a.materials ?? null,
+          a.height_in,
+          a.width_in,
+          a.depth_in ?? null,
+          a.short_description ?? null,
+          a.full_description ?? null,
+          a.artist_note ?? null,
+          a.internal_note ?? null,
+        ]
       );
-      const ar = insertArtwork.run([
-        inventoryNumber,
-        seriesRow.id,
-        a.title,
-        slug,
-        a.year_start,
-        a.year_end ?? null,
-        mediumRow.id,
-        a.materials ?? null,
-        inToCm(a.height_in)!,
-        inToCm(a.width_in)!,
-        inToCm(a.depth_in ?? null),
-        a.short_description ?? null,
-        a.full_description ?? null,
-        a.artist_note ?? null,
-        a.internal_note ?? null,
-      ]);
-      const artworkId = Number((ar as any).lastInsertRowid);
       artworksInserted++;
 
       // Insert images; first image becomes primary_image_id.
       let firstImageId: number | null = null;
       for (const img of a.images) {
-        const ir = db.prepare(
+        const { lastInsertRowid: imageId } = execWrite(
+          db,
           `INSERT INTO artwork_images
              (artwork_id, image_type, source_url, caption, alt_text, credit,
               display_order, visibility)
-           VALUES (?, ?, ?, ?, ?, ?, ?, 'internal')`
-        ).run([
-          artworkId,
-          img.image_type,
-          driveUrl(img.drive_file_id),
-          img.caption ?? null,
-          img.alt_text ?? null,
-          img.credit ?? null,
-          img.display_order,
-        ]);
-        const imageId = Number((ir as any).lastInsertRowid);
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'internal')`,
+          [
+            artworkId,
+            img.image_type,
+            driveUrl(img.drive_file_id),
+            img.caption ?? null,
+            img.alt_text ?? null,
+            img.credit ?? null,
+            img.display_order,
+          ]
+        );
         if (firstImageId === null) firstImageId = imageId;
         imagesInserted++;
       }
 
       if (firstImageId !== null) {
-        db.prepare(
-          `UPDATE artworks SET primary_image_id = ?, updated_at = datetime('now') WHERE id = ?`
-        ).run([firstImageId, artworkId]);
+        execWrite(
+          db,
+          `UPDATE artworks SET primary_image_id = ?, updated_at = datetime('now') WHERE id = ?`,
+          [firstImageId, artworkId]
+        );
       }
     }
-  });
+  }, 'seed: users + mediums + 20 series + 58 artworks + 67 images');
 
   console.log('seed complete:', {
     users: usersInserted,

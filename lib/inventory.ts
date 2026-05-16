@@ -371,6 +371,46 @@ export async function getArtworkBySlug(slug: string): Promise<ArtworkRow | null>
   }
 }
 
+export interface ArtworkImageRow {
+  id: number;
+  artwork_id: number;
+  image_type:
+    | "main"
+    | "detail"
+    | "process"
+    | "studio"
+    | "installation"
+    | "mockup";
+  source_url: string | null;
+  caption: string | null;
+  alt_text: string | null;
+  credit: string | null;
+  display_order: number;
+  visibility: "internal" | "dealer_share" | "public_website";
+  created_at: string;
+}
+
+export async function listArtworkImages(
+  artwork_id: number
+): Promise<ArtworkImageRow[]> {
+  const { db } = await openDbForRead();
+  try {
+    return rowsToObjects<ArtworkImageRow>(
+      execRows(
+        db,
+        `SELECT id, artwork_id, image_type, source_url, caption, alt_text,
+                credit, display_order, visibility, created_at
+           FROM artwork_images
+          WHERE artwork_id = $id
+          ORDER BY display_order ASC, id ASC`,
+        { $id: artwork_id }
+      )
+    );
+  } finally {
+    db.close();
+  }
+}
+
 export async function getArtworkById(id: number): Promise<ArtworkRow | null> {
   const { db } = await openDbForRead();
   try {
