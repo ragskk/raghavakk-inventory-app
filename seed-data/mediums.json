@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Acrylic on canvas",
+    "slug": "acrylic-on-canvas",
+    "category": "painting"
+  },
+  {
+    "name": "Oil on canvas",
+    "slug": "oil-on-canvas",
+    "category": "painting"
+  },
+  {
+    "name": "Hand-carved mahogany",
+    "slug": "hand-carved-mahogany",
+    "category": "sculpture"
+  },
+  {
+    "name": "Acrylic and digital print on archival cotton rag",
+    "slug": "acrylic-digital-print-archival-cotton-rag",
+    "category": "mixed"
+  }
+]

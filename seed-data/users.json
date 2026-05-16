@@ -1,0 +1,14 @@
+[
+  {
+    "email": "raghava.kk@gmail.com",
+    "name": "Raghava KK",
+    "role": "artist",
+    "active": 1
+  },
+  {
+    "email": "raghavakkstudio@gmail.com",
+    "name": "Sonia / Studio",
+    "role": "studio_admin",
+    "active": 1
+  }
+]

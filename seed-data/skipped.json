@@ -1,0 +1,180 @@
+{
+  "deferred_artworks": [
+    {
+      "work_id": "8A",
+      "series_code": "MT",
+      "reason": "title NOT NULL, height_cm NOT NULL, width_cm NOT NULL — sheet has 'Untitled' and 'Dimensions TK'",
+      "drive_image": { "id": "1VWVT9fq13X3vMhweOPHICnUHto9IEMx_", "filename": "8A.png" }
+    },
+    {
+      "work_id": "8B",
+      "series_code": "MT",
+      "reason": "title + dims TK",
+      "drive_image": { "id": "1Hj346P8UWD_JovDToXDTyKxm0iOvvaPp", "filename": "8B.jpg" }
+    },
+    {
+      "work_id": "8C",
+      "series_code": "MT",
+      "reason": "title + dims TK",
+      "drive_image": { "id": "1gakeZo9_F6YQr6Mnh0fQ4K63ZYEt7fwV", "filename": "8C.jpg" }
+    },
+    {
+      "work_id": "8D",
+      "series_code": "MT",
+      "reason": "title + dims TK",
+      "drive_image": { "id": "1U7oerRwoEJ7EPfTeTU2MFOenTkilSRXz", "filename": "8D.jpg" }
+    },
+    {
+      "work_id": "15A",
+      "series_code": "GV",
+      "reason": "title + medium + dims TK",
+      "drive_image": { "id": "17w_VXiyi9WyCJhy4wcoOxub9ZhFyK-6g", "filename": "15A.jpg" }
+    },
+    {
+      "work_id": "9A",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys not in Painting Metadata sheet — no title, year, medium, dims. Series row exists; awaiting Raghava metadata pass.",
+      "drive_image": { "id": "1zqPB3SIPpl1IttNbsW833FaeovGE-7ux", "filename": "9A.png" }
+    },
+    {
+      "work_id": "9B",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys — awaiting metadata",
+      "drive_image": { "id": "1S5LSgdf1pcXILGcEtHetkWM-HDXkjHsU", "filename": "9B.png" }
+    },
+    {
+      "work_id": "9C",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys — awaiting metadata",
+      "drive_image": { "id": "11_gbBOP9LbCXyxvlUUgFFjI-vOUgS7xK", "filename": "9C.png" }
+    },
+    {
+      "work_id": "9D",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys — awaiting metadata",
+      "drive_image": { "id": "1Slf1S2lGo-GKmIKCCrVNYYUFtBGjDr1C", "filename": "9D.png" }
+    },
+    {
+      "work_id": "9E",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys — awaiting metadata",
+      "drive_image": { "id": "10Hnoj4sM96yvAG5yiHojMMv787OkLYNd", "filename": "9E.png" }
+    },
+    {
+      "work_id": "9F",
+      "series_code": "PF",
+      "reason": "Powerfluff Toys — awaiting metadata",
+      "drive_image": { "id": "1n7U_L5LYLC3jUw7UxRHQjlYXlQMZ4V1I", "filename": "9F.png" }
+    },
+    {
+      "work_id": "13A",
+      "series_code": "TF",
+      "reason": "Toy Faces not in Painting Metadata sheet — no title, year, medium, dims. Series row exists; awaiting Raghava metadata pass.",
+      "drive_image": { "id": "1LGNHxrqr5oYbK49_sY3z8qOxDyxq1dtw", "filename": "13A.png" }
+    },
+    {
+      "work_id": "13B",
+      "series_code": "TF",
+      "reason": "Toy Faces — awaiting metadata",
+      "drive_image": { "id": "1eZLo6ct0E6THrU6s3ziLX_DvBOWLlv8s", "filename": "13B.png" }
+    },
+    {
+      "work_id": "13C",
+      "series_code": "TF",
+      "reason": "Toy Faces — awaiting metadata",
+      "drive_image": { "id": "1u4Nmtj9IbM4or8JK0bdm3Yz8IIKkgFcD", "filename": "13C.png" }
+    },
+    {
+      "work_id": "13D",
+      "series_code": "TF",
+      "reason": "Toy Faces — awaiting metadata",
+      "drive_image": { "id": "1Jp0MfLg6HVu9eHSC8NkPEW56Cy47wPrQ", "filename": "13D.png" }
+    },
+    {
+      "work_id": "13E",
+      "series_code": "TF",
+      "reason": "Toy Faces — awaiting metadata",
+      "drive_image": { "id": "1fEGQ9GRQNbad2TYNn8zKZjYqziiOmhYW", "filename": "13E.png" }
+    },
+    {
+      "work_id": "13F",
+      "series_code": "TF",
+      "reason": "Toy Faces — awaiting metadata",
+      "drive_image": { "id": "1724OgAQrtlpuADszevC1L3ewvlLHnn-F", "filename": "13F.png" }
+    }
+  ],
+  "unattached_drive_files": [
+    {
+      "drive_file_id": "1yNS8uWGT0e-pjhuj1nOy_jcrcP136dKH",
+      "filename": "Woman-IB1.jpg",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "Doesn't match any IB Work ID in sheet (2A-2E). 'IB1' suggests an older naming scheme — possibly pre-catalogue work or alternate view."
+    },
+    {
+      "drive_file_id": "1mM3ApRMTU6rI8F4yPPcEFnS7uJIRdREO",
+      "filename": "Woman IB4.jpg",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "Doesn't match any IB Work ID in sheet. 'IB4' suggests an older naming scheme."
+    },
+    {
+      "drive_file_id": "1kMIx5w7iC9hNPmrwC9SUSszkVETNUUq9",
+      "filename": "TIBAW.jpg",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "Title abbreviation unresolved. Possibly 'The Impossible Bouquet at War' or similar."
+    },
+    {
+      "drive_file_id": "1gI9affERBpGdpvRU_Qc_pZ-JrBqhgAvn",
+      "filename": "CEIYC.jpg",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "Likely a Catch 'em if you can work, misfiled. Doesn't map to a specific Work ID."
+    },
+    {
+      "drive_file_id": "13h7KTw021kvXnv4Q3SHZ82hT1dWtHp1B",
+      "filename": "CEIYC 2.jpg",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "Likely a Catch 'em if you can work, misfiled."
+    },
+    {
+      "drive_file_id": "1NFkb-k__R3o39K72BaKRXjv6-9fE5GGU",
+      "filename": "IMG_1844.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture, probably installation/process. No mapping to Work ID."
+    },
+    {
+      "drive_file_id": "101u_FZPFBeL3m9aNoMVvda1MQS4qUw5A",
+      "filename": "IMG_1839.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    },
+    {
+      "drive_file_id": "10sztOD8BguUCuhj_JyWJgjMV63EcORxe",
+      "filename": "IMG_1845.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    },
+    {
+      "drive_file_id": "1BFW-e9FvCHD1QLUz6twwZjMx68-QRBDN",
+      "filename": "IMG_1842.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    },
+    {
+      "drive_file_id": "1Lj3CyXDuoZBVNWBgZRTzEqx25-Ny0doz",
+      "filename": "IMG_1841.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    },
+    {
+      "drive_file_id": "1rQ_Ye7MNlTAFQHxP5mwjHBYagePaiNjf",
+      "filename": "IMG_1840.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    },
+    {
+      "drive_file_id": "1NKOEMuh5jNwjKMKNKdJF-NtQuKHzT7zm",
+      "filename": "IMG_1838.heic",
+      "folder": "2 — Impossible Bouquets",
+      "reason": "iPhone capture."
+    }
+  ]
+}

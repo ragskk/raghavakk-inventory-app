@@ -1,0 +1,727 @@
+[
+  {
+    "work_id": "1A",
+    "series_code": "TH",
+    "title": "A gallery of adorable boundaries",
+    "year_start": 2011,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 70,
+    "width_in": 46,
+    "images": [
+      { "drive_file_id": "1eeWf2oZ83c1m9K_vREeZwmAX9PDUHwRL", "filename": "1A.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "1B",
+    "series_code": "TH",
+    "title": "That's all folks",
+    "year_start": 2013,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 57,
+    "width_in": 85,
+    "images": [
+      { "drive_file_id": "1wuyV3KaSmB8GOKxCmzs4OxwHbZxSspji", "filename": "1B.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "1C",
+    "series_code": "TH",
+    "title": "Waiting for a tailor to fit you with a straight jacket",
+    "year_start": 2015,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 57,
+    "width_in": 79,
+    "images": [
+      { "drive_file_id": "1MNRT45407Ji9tG7QRf7UdSi-L8KFnLCn", "filename": "1C.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "1D",
+    "series_code": "TH",
+    "title": "Transformers",
+    "year_start": 2012,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 60,
+    "width_in": 78,
+    "images": [
+      { "drive_file_id": "1__UM_kB2nAbaLcX71x2fPEZYvwh6fNEl", "filename": "1D.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "1E",
+    "series_code": "TH",
+    "title": "Redrawing the map",
+    "year_start": 2012,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 46,
+    "width_in": 93,
+    "images": [
+      { "drive_file_id": "17rA7aHxHw1NG1m4g4j7EKYyoMwGtlF6b", "filename": "1E.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "1F",
+    "series_code": "TH",
+    "title": "24",
+    "year_start": 2011,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 64,
+    "width_in": 91,
+    "images": [
+      { "drive_file_id": "1ENZEtN9KC4pM8yXYYvIzwbsSZNyDr9A0", "filename": "1F.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "2A",
+    "series_code": "IB",
+    "title": "Impossible Living Machines",
+    "year_start": 2020,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 60,
+    "width_in": 84,
+    "images": [
+      { "drive_file_id": "17ajR8A3wF2Y5EDA4Zc9LApfHTcV1gCSc", "filename": "2A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "2B",
+    "series_code": "IB",
+    "title": "Impossible Bouquet II",
+    "year_start": 2019,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 84,
+    "width_in": 60,
+    "images": [
+      { "drive_file_id": "1AGbNqNjWXQKGw-g38B4BCh0miFL3vA2d", "filename": "2B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "2C",
+    "series_code": "IB",
+    "title": "Meeuw's Impossible Bouquet",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 95,
+    "width_in": 68,
+    "images": [
+      { "drive_file_id": "1lltaUoPL3yJgCM8jIu-_ew6X1MhE6XhI", "filename": "2C.tif", "image_type": "main", "display_order": 1 },
+      { "drive_file_id": "1dKQgP7muxoXA3a2osp3jCQC-nXtr_3tq", "filename": "2C copy.jpg", "image_type": "main", "display_order": 2 }
+    ]
+  },
+  {
+    "work_id": "2D",
+    "series_code": "IB",
+    "title": "Impossible Bouquet VI",
+    "year_start": 2020,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 60,
+    "width_in": 36,
+    "images": [
+      { "drive_file_id": "1c8QbSTThGbI6mMMUELLHS_qOm-e46SWz", "filename": "2D.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "2E",
+    "series_code": "IB",
+    "title": "To See Or Not To See",
+    "year_start": 2023,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 60,
+    "width_in": 84,
+    "images": [
+      { "drive_file_id": "1vucQ2HM-3qH8oOJ38ActmTPf7g_Csp5K", "filename": "2E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "3A",
+    "series_code": "GP",
+    "title": "Guernica for the Siri-ocene",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 144,
+    "width_in": 312,
+    "internal_note": "Monumental — 3.5 × 8 m. Exhibited at Volte Art Projects, Dubai, 2022 (Guernica Reimagined).",
+    "images": [
+      { "drive_file_id": "1mcx-plENISk-H9bEULU81YhsEt28A7E5", "filename": "3A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "3B",
+    "series_code": "GP",
+    "title": "Guernica Reclaimed",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 144,
+    "width_in": 312,
+    "images": [
+      { "drive_file_id": "1v1dVZAMekieL9Xi0VfGSy4I4FP10JBpA", "filename": "3B.jpeg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "3C",
+    "series_code": "GP",
+    "title": "Guernica 2.0",
+    "year_start": 2015,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 80,
+    "width_in": 188,
+    "images": [
+      { "drive_file_id": "1nvtdwkw9TDQH4RuprY9ox7kXk-7jC8a-", "filename": "3C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "3D",
+    "series_code": "GP",
+    "title": "La Liberté De Guernica",
+    "year_start": 2023,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 144,
+    "width_in": 312,
+    "internal_note": "Two image files exist: 3D.jpg (in GP folder) and Liberty Guernica.jpg (misfiled in IB folder).",
+    "images": [
+      { "drive_file_id": "1S45DzQiXAIgm3IsYLG3Dxu5Cabs5RNsb", "filename": "3D.jpg", "image_type": "main", "display_order": 1 },
+      { "drive_file_id": "1lLoq6K_TO4R-LJfX3BClNag9z0J2OV_P", "filename": "Liberty Guernica.jpg", "image_type": "detail", "display_order": 2 }
+    ]
+  },
+
+  {
+    "work_id": "4A",
+    "series_code": "SM",
+    "title": "Sublime Machine I",
+    "year_start": 2017,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 77,
+    "width_in": 55,
+    "images": [
+      { "drive_file_id": "1n7rH2Ny6b5eUgiGacDmfz0irPjQd_oYC", "filename": "4A.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "4B",
+    "series_code": "SM",
+    "title": "Sublime Machine II",
+    "year_start": 2017,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 80,
+    "width_in": 57,
+    "images": [
+      { "drive_file_id": "1uRw4SYXXDGContt3q-aP4c4XkAETEj-X", "filename": "4B.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "4C",
+    "series_code": "SM",
+    "title": "Sublime Machine IV",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 62,
+    "width_in": 44,
+    "images": [
+      { "drive_file_id": "1kIBDKD3wtzqSG6usjZVHvd_A6VvEYwvn", "filename": "4C.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "4D",
+    "series_code": "SM",
+    "title": "Sublime Machine VI",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 62,
+    "width_in": 44,
+    "images": [
+      { "drive_file_id": "1uCEdBoPrMepSsq-fXJlKfW3kbJBKz--I", "filename": "4D.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "4E",
+    "series_code": "SM",
+    "title": "Anthropocene V",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 44,
+    "width_in": 33,
+    "internal_note": "Title 'Anthropocene V' suggests this is the surviving fifth work from an earlier Anthropocene series now folded into Sublime Machines. See series.json open question on the AC placeholder.",
+    "images": [
+      { "drive_file_id": "1ZJRYDortVGzXgFyISzJevYaJ-ALjfuUS", "filename": "4E.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "4F",
+    "series_code": "SM",
+    "title": "Sublime Machine IX",
+    "year_start": 2018,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 44,
+    "width_in": 37,
+    "images": [
+      { "drive_file_id": "1B2KFw7oUOzVTiR7KXIOg-FOlafCMI8wF", "filename": "4F.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "5A",
+    "series_code": "CC",
+    "title": "He, whose story is always one step ahead of him",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1b0ps-RqRCgRSJTnJPeoDmGB5j5C74_Dm", "filename": "5A.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "5B",
+    "series_code": "CC",
+    "title": "Lost In Goose Land",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1WPmueDoDr6T3fyuQcK3NJqY1dJy4u_o4", "filename": "5B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "5C",
+    "series_code": "CC",
+    "title": "Big Mama's Lil' Prince",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1E9aLqvnhg8SD6CSf69-mhT0tNrgJETLG", "filename": "5C.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "5D",
+    "series_code": "CC",
+    "title": "Selectively cute",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1hkEfQSNvOh6qdnYmPc8JqBJ05pd0fwdd", "filename": "5D.tif", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "5E",
+    "series_code": "CC",
+    "title": "World Domination",
+    "year_start": 2021,
+    "medium_slug": "acrylic-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "12SY7oaGakjOlFFa47qdITNi60SxC8P2n", "filename": "5E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "6A",
+    "series_code": "OP",
+    "title": "La petite mort",
+    "year_start": 2021,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "short_description": "The originating work of the Orgasm Project. EEG brain waves recorded during orgasm, translated via Artmatr robotics into oil on canvas. Sold at Sotheby's × Burning Man Online Auction, 2021.",
+    "images": [
+      { "drive_file_id": "1vF1RF2gg02lvsAji4uS13JTKuI38WR_6", "filename": "6A.png", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "6B",
+    "series_code": "OP",
+    "title": "Cyborg Orgasm 1",
+    "year_start": 2022,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "images": [
+      { "drive_file_id": "1qB2toYIUdaQAhGAc2AqirigxAHrluFu6", "filename": "6B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "6C",
+    "series_code": "OP",
+    "title": "Cyborg Orgasm 2",
+    "year_start": 2022,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "images": [
+      { "drive_file_id": "1VRK29KIcEN-kVGXDYvcXf3PoXCmLGGTn", "filename": "6C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "6D",
+    "series_code": "OP",
+    "title": "Cyborg Orgasm 3",
+    "year_start": 2022,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "images": [
+      { "drive_file_id": "1QCvotA1CMo-LxFIGwypH-uv6uYTjY1J3", "filename": "6D.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "6E",
+    "series_code": "OP",
+    "title": "Cyborg Orgasm 4",
+    "year_start": 2022,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "images": [
+      { "drive_file_id": "1Z0h1J6KRohyeQADUaljzKX-V0PwaSWd0", "filename": "6E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "6F",
+    "series_code": "OP",
+    "title": "Cyborg Orgasm 5",
+    "year_start": 2022,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 74,
+    "width_in": 74,
+    "images": [
+      { "drive_file_id": "1jAQbXm4B_PTdbACB7trsDEgw0tvXiu_1", "filename": "6F.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "7A",
+    "series_code": "ED",
+    "title": "How would you tell a story from the margins?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 48,
+    "width_in": 72,
+    "images": [
+      { "drive_file_id": "1WgC_e9FG5YgNKXP2hZuGpTBBqMrVTEIp", "filename": "7A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7B",
+    "series_code": "ED",
+    "title": "The presence of the beloved's absence.",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1hN6rtq-6ku-qmop4wcuTPfPtwSdOsYLP", "filename": "7B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7C",
+    "series_code": "ED",
+    "title": "Can a landscape be miniaturized?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 12,
+    "width_in": 16,
+    "images": [
+      { "drive_file_id": "1N4EAH_RRdTNRazM6RirnHQvP255c7evL", "filename": "7C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7D",
+    "series_code": "ED",
+    "title": "Is erotic attraction reducible to physics?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1KJ1hkTuLl_IeUXSv0cy2YG8LstrZQcVa", "filename": "7D.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7E",
+    "series_code": "ED",
+    "title": "What kind of body do you possess in a dream?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1_umZoHIFpIRgY3lPQIC-vcEX2YYVQONR", "filename": "7E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7F",
+    "series_code": "ED",
+    "title": "Can you easily organise bodies into types?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "materials": "Diptych (two panels)",
+    "height_in": 48,
+    "width_in": 36,
+    "internal_note": "Diptych. Sheet records 48\" × 36\" — unclear whether per panel or combined. Drive folder has 7F_A.jpg and 7F_A(1).jpg; the second is presumably the B panel mislabeled. Confirm with Raghava.",
+    "images": [
+      { "drive_file_id": "1hJsbvtOR0Z0rWsuzQEONSlgjFHvyfKY4", "filename": "7F_A.jpg", "image_type": "main", "display_order": 1 },
+      { "drive_file_id": "18tZy32zJdVeos2wQSfYwOr-nSZGhuKes", "filename": "7F_A(1).jpg", "image_type": "main", "display_order": 2 }
+    ]
+  },
+  {
+    "work_id": "7G",
+    "series_code": "ED",
+    "title": "Can you be friends with your clone?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "materials": "Diptych (two panels)",
+    "height_in": 24,
+    "width_in": 24,
+    "internal_note": "Diptych. Sheet records 24\" × 24\" per panel.",
+    "images": [
+      { "drive_file_id": "1F07QyL59HJldOqs0BxNF8-AMEapBavh_", "filename": "7G_A.jpg", "image_type": "main", "display_order": 1 },
+      { "drive_file_id": "173Wf5NK0KTuY68dDg0OEOs5H8jxNRDDW", "filename": "7G_B.jpg", "image_type": "main", "display_order": 2 }
+    ]
+  },
+  {
+    "work_id": "7I",
+    "series_code": "ED",
+    "title": "If my body were opened up, what would you see?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1CxihN2zHNWLjkbTvLHr3Q5M9urxEAdeN", "filename": "7I.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "7J",
+    "series_code": "ED",
+    "title": "Is a dead body a body or a thing?",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "10jygSy3z9CXDiAjorxd0GA8wAR4AIYz3", "filename": "7J.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "10A",
+    "series_code": "EC",
+    "title": "Balance",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 48,
+    "width_in": 36,
+    "images": [
+      { "drive_file_id": "157YsNGCzDKuUuVejevcikmnk6c30_WGj", "filename": "10A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "10B",
+    "series_code": "EC",
+    "title": "Conflict",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 48,
+    "width_in": 36,
+    "images": [
+      { "drive_file_id": "1JezrllRSLqfxUOtA9WquVkDQWfNRt0QJ", "filename": "10B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "10C",
+    "series_code": "EC",
+    "title": "Personality",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1I-aa3PNh5oDQbSoqHGDS9HWJJ-iiRfJc", "filename": "10C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "11",
+    "series_code": "TT",
+    "title": "The Toy Trojan",
+    "year_start": 2020,
+    "medium_slug": "hand-carved-mahogany",
+    "height_in": 78,
+    "width_in": 30,
+    "depth_in": 30,
+    "internal_note": "One physical object photographed from six views (front, side, rear, detail, study, install). Sheet rows 11A-F collapsed into this single artwork row per Raghava's confirmation.",
+    "images": [
+      { "drive_file_id": "18T6F3VtZtZ3T8cM3nAok7NH4iNOlxbYU", "filename": "11A.png", "image_type": "main", "display_order": 1, "caption": "Front view" },
+      { "drive_file_id": "1fFNeAwDmTwUabj4pdBidYOqD6d9Ft4pp", "filename": "11B.png", "image_type": "detail", "display_order": 2, "caption": "Side view" },
+      { "drive_file_id": "12wtD1eTaL_R_1yKo7bMb4nwVwjFV85RN", "filename": "11C.png", "image_type": "detail", "display_order": 3, "caption": "Rear view" },
+      { "drive_file_id": "1hjFqSAm8emOulPhwQkAO7usXEp8GRxD_", "filename": "11D.png", "image_type": "detail", "display_order": 4, "caption": "Detail" },
+      { "drive_file_id": "1JvWj3susrIJQf3Uj3I0yTdvoIiO0SbzM", "filename": "11E.JPG", "image_type": "process", "display_order": 5, "caption": "Study" },
+      { "drive_file_id": "1RpWCQMZw1y5BasADC_91lLNp_LyfjYJt", "filename": "11F.JPG", "image_type": "installation", "display_order": 6, "caption": "Installation view" }
+    ]
+  },
+
+  {
+    "work_id": "12A",
+    "series_code": "FS",
+    "title": "By the swagger of our programmes",
+    "year_start": 2021,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1eBlmqgUXe_6PwOPwim0Z-usR-bAAgc60", "filename": "12A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "12B",
+    "series_code": "FS",
+    "title": "Momentary Passages",
+    "year_start": 2021,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 48,
+    "width_in": 72,
+    "images": [
+      { "drive_file_id": "1l7TW00whTXpDsCkT_6ljlUCF4fPzhztr", "filename": "12B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "12C",
+    "series_code": "FS",
+    "title": "Hamlet",
+    "year_start": 2020,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1OV1Raoz7ROBmvzXcgTJhTKpq2BNdXjls", "filename": "12C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "12D",
+    "series_code": "FS",
+    "title": "Manifestly Impossible",
+    "year_start": 2021,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1mnhC5V59u5PfHhr671VOa-ru6m9trTRb", "filename": "12D.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "12E",
+    "series_code": "FS",
+    "title": "Drunk Sunflower",
+    "year_start": 2021,
+    "medium_slug": "oil-on-canvas",
+    "height_in": 72,
+    "width_in": 48,
+    "images": [
+      { "drive_file_id": "1qlKng5paIopT436gHqy-mkwckqWIgu69", "filename": "12E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+
+  {
+    "work_id": "14A",
+    "series_code": "IB2",
+    "title": "Goes the bauble",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 43,
+    "width_in": 84.6,
+    "images": [
+      { "drive_file_id": "1LYsZhr1FGV9uXtsmMq_RG21iJYK6yPN1", "filename": "14A.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14B",
+    "series_code": "IB2",
+    "title": "Of the Machine, II",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 60,
+    "width_in": 36,
+    "images": [
+      { "drive_file_id": "1-jBYNW-I57ht1STFdxSkybpf2RFLdlY0", "filename": "14B.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14C",
+    "series_code": "IB2",
+    "title": "Language Drawn from Living",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 43,
+    "width_in": 43,
+    "images": [
+      { "drive_file_id": "1jU4EYoGQ7_jGO-REk2HT0dCcZIp5yXUb", "filename": "14C.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14D",
+    "series_code": "IB2",
+    "title": "We See That He is Good",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 43,
+    "width_in": 43,
+    "images": [
+      { "drive_file_id": "1MVUFP_69rcNbd18FSlAB29_kUClzW1Wo", "filename": "14D.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14E",
+    "series_code": "IB2",
+    "title": "Of definitions",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 42,
+    "width_in": 24,
+    "images": [
+      { "drive_file_id": "1xtFY_LTO2Lq55oYY74JODGTKNaFEVRMc", "filename": "14E.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14F",
+    "series_code": "IB2",
+    "title": "Elementary",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 42,
+    "width_in": 24,
+    "images": [
+      { "drive_file_id": "1PHbgMe8_XvIR3A9r1AdaAfiHKzytVOqC", "filename": "14F.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14G",
+    "series_code": "IB2",
+    "title": "Defenders of the faith",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 60,
+    "width_in": 30,
+    "images": [
+      { "drive_file_id": "1qS_xknrrUJIrzUbLD720HlTCU0e59AT0", "filename": "14G.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  },
+  {
+    "work_id": "14H",
+    "series_code": "IB2",
+    "title": "The Existential Condition of Secrets",
+    "year_start": 2023,
+    "medium_slug": "acrylic-digital-print-archival-cotton-rag",
+    "height_in": 43,
+    "width_in": 64.5,
+    "images": [
+      { "drive_file_id": "1hEH6frEN5e5a5rc0Wj6FLVyf4QOCOCX2", "filename": "14H.jpg", "image_type": "main", "display_order": 1 }
+    ]
+  }
+]
