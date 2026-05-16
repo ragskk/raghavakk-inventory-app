@@ -178,16 +178,31 @@ export function ArtworkGrid({
   return (
     <>
       {/* Selection helpers */}
-      <div className="flex items-center justify-between mb-3 font-mono text-meta text-muted">
-        <span>
+      <div className="flex items-center justify-between mb-3 font-mono text-meta gap-3 flex-wrap">
+        <span className="text-muted">
           {rows.length} loaded
-          {selected.size > 0 ? ` · ${selected.size} selected` : ""}
+          {selected.size > 0 ? (
+            <>
+              {" · "}
+              <strong className="text-current">
+                {selected.size} selected
+              </strong>
+            </>
+          ) : (
+            ""
+          )}
         </span>
         <div className="flex items-center gap-3">
+          {selected.size === 0 ? (
+            <span className="text-muted italic">
+              tip · click the checkbox on a card to start a batch · shift+click
+              to range-select
+            </span>
+          ) : null}
           <button
             type="button"
             onClick={selectAllVisible}
-            className="underline hover:text-current"
+            className="border border-current px-2 py-1 hover:bg-paper-2 transition-colors"
           >
             select all visible
           </button>
@@ -197,7 +212,7 @@ export function ArtworkGrid({
               onClick={clearSelection}
               className="underline hover:text-current"
             >
-              clear
+              clear selection
             </button>
           )}
         </div>
@@ -212,19 +227,19 @@ export function ArtworkGrid({
             <li
               key={r.id}
               className={
-                "relative " +
+                "relative group " +
                 (isSelected
                   ? "ring-2 ring-[var(--red)] ring-offset-2 ring-offset-paper-1"
                   : "")
               }
             >
-              {/* Checkbox overlay */}
+              {/* Checkbox overlay — always visible so the affordance is obvious */}
               <label
                 className={
-                  "absolute top-2 left-2 z-10 w-7 h-7 flex items-center justify-center bg-paper-1/85 border border-current cursor-pointer transition-opacity " +
+                  "absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center bg-paper-1 border-2 cursor-pointer transition-all shadow-sm " +
                   (isSelected
-                    ? "opacity-100"
-                    : "opacity-0 group-hover:opacity-100 focus-within:opacity-100 hover:opacity-100")
+                    ? "border-[var(--red)] opacity-100"
+                    : "border-current/70 opacity-80 group-hover:opacity-100 group-hover:border-current")
                 }
                 onClick={(e) => e.stopPropagation()}
               >
@@ -236,7 +251,7 @@ export function ArtworkGrid({
                     e.stopPropagation();
                     toggleOne(r.id, e.shiftKey);
                   }}
-                  className="cursor-pointer"
+                  className="w-4 h-4 cursor-pointer accent-[var(--red)]"
                   aria-label={`select ${r.title}`}
                 />
               </label>
