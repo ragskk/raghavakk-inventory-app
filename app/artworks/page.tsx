@@ -1,53 +1,66 @@
 import Link from "next/link";
-import { listArtworks, listSeries } from "@/lib/inventory";
+import { listArtworks, listMediums, listSeries } from "@/lib/inventory";
 import { ListArtworksQuery } from "@/lib/validation/artwork";
+import { ArtworkFilters } from "./_components/ArtworkFilters";
+import { ArtworkGrid } from "./_components/ArtworkGrid";
 
 /**
- * Artworks list — registrar overview.
+ * Artworks list — image-first grid with live filters + infinite scroll.
  *
- * Image-first grid. Click anywhere on a card → detail page. Filters
- * collapsed into a single search-style bar at top. URL search params drive
- * filtering so bookmarks survive.
- *
- * Density: 4-up desktop / 3-up tablet / 2-up mobile. Each card carries the
- * thumb, title, inventory #, series, and status chip(s).
+ * Server fetches the first batch (24). Client component <ArtworkGrid>
+ * fetches subsequent batches via GET /api/artworks as the sentinel
+ * scrolls into view. <ArtworkFilters> auto-pushes URL params on change —
+ * no apply button.
  */
+
+const INITIAL_BATCH = 24;
 
 interface PageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
-
-const AVAIL_TONE: Record<string, string> = {
-  available: "bg-green-100 text-green-900 border-green-300",
-  on_hold: "bg-amber-100 text-amber-900 border-amber-300",
-  reserved: "bg-amber-100 text-amber-900 border-amber-300",
-  sold: "bg-rose-100 text-rose-900 border-rose-300",
-  not_for_sale: "bg-stone-200 text-stone-700 border-stone-400",
-  withdrawn: "bg-stone-200 text-stone-700 border-stone-400",
-};
 
 function normalizeParams(
   raw: Record<string, string | string[] | undefined>,
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(raw)) {
-    if (Array.isArray(v)) out[k] = v[v.length - 1] ?? "";
-    else if (typeof v === "string") out[k] = v;
+    const s = Array.isArray(v)
+      ? (v[v.length - 1] ?? "")
+      : typeof v === "string"
+        ? v
+        : "";
+    if (s === "") continue; // Drop empties so they don't fail Zod parse
+    out[k] = s;
   }
   return out;
 }
 
+/** Build the canonical filter-query string passed to the client. */
+function buildFilterQuery(raw: Record<string, string>): string {
+  const sp = new URLSearchParams();
+  for (const k of ["series_id", "availability", "q", "include_archived"]) {
+    if (raw[k]) sp.set(k, raw[k]);
+  }
+  return sp.toString();
+}
+
 export default async function ArtworksListPage({ searchParams }: PageProps) {
   const raw = normalizeParams(await searchParams);
-  const parsed = ListArtworksQuery.safeParse(raw);
+
+  const parsed = ListArtworksQuery.safeParse({
+    ...raw,
+    limit: String(INITIAL_BATCH),
+    offset: "0",
+  });
   const filters = parsed.success ? parsed.data : ListArtworksQuery.parse({});
 
-  const [rows, series] = await Promise.all([
+  const [rows, series, mediums] = await Promise.all([
     listArtworks(filters),
     listSeries(),
+    listMediums(),
   ]);
 
-  const seriesById = new Map(series.map((s) => [s.id, s]));
+  const filterQuery = buildFilterQuery(raw);
 
   return (
     <main className="dash-chrome min-h-dvh px-6 py-8 max-w-editorial mx-auto">
@@ -59,170 +72,30 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
             <span className="red-word">Artworks</span>
           </h1>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-meta text-muted">
-            {rows.length} of {filters.limit > 0 ? `${filters.limit} per page` : "—"}
-          </span>
-          <Link
-            href="/artworks/new"
-            className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-2 transition-colors"
-          >
-            + new
-          </Link>
-        </div>
+        <Link
+          href="/artworks/new"
+          className="font-mono text-meta border border-current px-3 py-2 hover:bg-paper-2 transition-colors"
+        >
+          + new
+        </Link>
       </div>
 
-      {/* Compact filter bar — one row */}
-      <form
-        method="GET"
-        className="flex flex-wrap items-center gap-2 mb-8 font-mono text-meta border border-current/40 p-2 bg-paper-2/40"
-      >
-        <input
-          type="text"
-          name="q"
-          defaultValue={filters.q ?? ""}
-          placeholder="search title or inventory #"
-          className="border border-current/40 bg-paper-1 px-2 py-1 flex-1 min-w-[14rem]"
-        />
-        <select
-          name="series_id"
-          defaultValue={filters.series_id ?? ""}
-          className="border border-current/40 bg-paper-1 px-2 py-1"
-        >
-          <option value="">all series</option>
-          {series.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.code} — {s.name}
-            </option>
-          ))}
-        </select>
-        <select
-          name="availability"
-          defaultValue={(filters.availability ?? []).join(",")}
-          className="border border-current/40 bg-paper-1 px-2 py-1"
-        >
-          <option value="">any availability</option>
-          <option value="available">available</option>
-          <option value="on_hold">on hold</option>
-          <option value="reserved">reserved</option>
-          <option value="sold">sold</option>
-          <option value="not_for_sale">not for sale</option>
-          <option value="withdrawn">withdrawn</option>
-        </select>
-        <label className="inline-flex items-center gap-1.5">
-          <input
-            type="checkbox"
-            name="include_archived"
-            value="1"
-            defaultChecked={filters.include_archived}
-          />
-          <span>archived</span>
-        </label>
-        <button
-          type="submit"
-          className="border border-current px-3 py-1 hover:bg-paper-1 transition-colors"
-        >
-          apply
-        </button>
-        <Link
-          href="/artworks"
-          className="underline text-muted hover:text-current"
-        >
-          clear
-        </Link>
-      </form>
+      <ArtworkFilters
+        series={series}
+        initial={{
+          series_id: filters.series_id ?? null,
+          availability: (filters.availability ?? [])[0] ?? "",
+          q: filters.q ?? "",
+          include_archived: filters.include_archived,
+        }}
+      />
 
-      {/* Results */}
-      {rows.length === 0 ? (
-        <div className="border border-dashed border-current/40 p-12 text-center">
-          <p className="font-body text-muted mb-3">
-            No artworks match the current filters.
-          </p>
-          <div className="flex items-center justify-center gap-3 font-mono text-meta">
-            <Link href="/artworks" className="underline">
-              clear filters
-            </Link>
-            <span className="text-muted">·</span>
-            <Link href="/artworks/new" className="underline">
-              create the first artwork
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {rows.map((r) => {
-            const s = seriesById.get(r.series_id);
-            const archived = r.is_archived === 1;
-            return (
-              <li key={r.id}>
-                <Link
-                  href={`/artworks/${r.slug}`}
-                  className={
-                    "block group focus:outline-none focus:ring-2 focus:ring-[var(--red)] " +
-                    (archived ? "opacity-50" : "")
-                  }
-                >
-                  <div className="bg-paper-2 aspect-square overflow-hidden border border-current/20 group-hover:border-current/60 transition-colors">
-                    {r.primary_image_id != null ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={`/api/work-image/${r.id}/thumb`}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                      />
-                    ) : (
-                      <div
-                        aria-hidden
-                        className="flex w-full h-full items-center justify-center font-mono text-meta text-muted"
-                      >
-                        no image
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-2 space-y-0.5">
-                    <p className="font-body leading-tight line-clamp-2 group-hover:underline">
-                      {r.title}
-                    </p>
-                    <p className="font-mono text-meta text-muted">
-                      {r.inventory_number}
-                      {s ? ` · ${s.code}` : ""}
-                      {r.year_start ? ` · ${r.year_start}` : ""}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1 pt-0.5">
-                      <span
-                        className={
-                          "inline-flex items-center font-mono text-[10px] border px-1.5 py-0.5 " +
-                          (AVAIL_TONE[r.availability_status] ||
-                            "bg-paper-2 border-current/40")
-                        }
-                      >
-                        {r.availability_status.replace(/_/g, " ")}
-                      </span>
-                      {r.image_count > 1 && (
-                        <span className="font-mono text-[10px] text-muted">
-                          {r.image_count} imgs
-                        </span>
-                      )}
-                      {archived && (
-                        <span className="font-mono text-[10px] text-muted italic">
-                          archived
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      <p className="mt-8 text-muted font-mono text-meta">
-        {rows.length} result{rows.length === 1 ? "" : "s"} · limit{" "}
-        {filters.limit} · offset {filters.offset}
-      </p>
+      <ArtworkGrid
+        initialRows={rows}
+        series={series}
+        mediums={mediums}
+        filterQuery={filterQuery}
+      />
     </main>
   );
 }

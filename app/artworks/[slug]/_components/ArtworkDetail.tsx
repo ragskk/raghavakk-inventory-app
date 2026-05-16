@@ -20,6 +20,7 @@ import type {
   SeriesRow,
   ArtworkImageRow,
 } from "@/lib/inventory";
+import { ArtworkThumb } from "../../_components/ArtworkThumb";
 
 /* ---------------------------------------------------------------------------
  * Artwork detail — compact, inline-editable.
@@ -754,18 +755,14 @@ export function ArtworkDetail({
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6 items-start">
           {/* Hero */}
           <div className="bg-paper-2 aspect-[4/3] overflow-hidden flex items-center justify-center">
-            {primary ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={`/api/work-image/${artwork.id}/hero`}
-                alt={primary.alt_text || artwork.title}
-                className="w-full h-full object-contain"
-                loading="eager"
-                decoding="async"
-              />
-            ) : (
-              <p className="font-mono text-meta text-muted">no image</p>
-            )}
+            <ArtworkThumb
+              artworkId={artwork.id}
+              variant="hero"
+              hasImage={primary != null}
+              alt={primary?.alt_text || artwork.title}
+              contain
+              cacheKey={artwork.updated_at}
+            />
           </div>
 
           {/* Thumb strip */}
@@ -784,13 +781,14 @@ export function ArtworkDetail({
                     }
                   >
                     {isPrimary ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={`/api/work-image/${artwork.id}/thumb`}
-                        alt=""
-                        className="w-full aspect-square object-cover"
-                        loading="lazy"
-                      />
+                      <div className="w-full aspect-square">
+                        <ArtworkThumb
+                          artworkId={artwork.id}
+                          variant="thumb"
+                          hasImage
+                          cacheKey={artwork.updated_at}
+                        />
+                      </div>
                     ) : (
                       <div className="w-full aspect-square bg-paper-2 flex items-center justify-center text-center px-1">
                         <span className="font-mono text-[10px] text-muted leading-tight">
@@ -815,9 +813,9 @@ export function ArtworkDetail({
         </div>
       </section>
 
-      {/* Fields */}
-      <div className="px-6 mt-10 max-w-editorial mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 pb-16">
-        <FieldGroup title="dimensions">
+      {/* Fields — magazine-style numbered sections */}
+      <div className="px-6 mt-16 max-w-editorial mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-14 pb-24">
+        <FieldGroup num={1} title="Dimensions">
           <InlineField
             label="height (in)"
             value={artwork.height_in}
@@ -893,7 +891,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="year">
+        <FieldGroup num={2} title="Year">
           <InlineField
             label="year start"
             value={artwork.year_start}
@@ -918,7 +916,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="edition / AP">
+        <FieldGroup num={3} title="Edition / AP">
           <InlineField
             label="edition #"
             value={artwork.edition_number}
@@ -951,7 +949,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="pricing">
+        <FieldGroup num={4} title="Pricing">
           <InlineField
             label="USD"
             value={artwork.price_usd_cents}
@@ -1000,7 +998,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="public website">
+        <FieldGroup num={5} title="Public website">
           <InlineField
             label="visible on website"
             value={artwork.website_visible === 1}
@@ -1056,7 +1054,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="descriptions" full>
+        <FieldGroup num={6} title="Descriptions" full prose>
           <InlineField
             label="short description (one-liner)"
             value={artwork.short_description}
@@ -1103,7 +1101,7 @@ export function ArtworkDetail({
           />
         </FieldGroup>
 
-        <FieldGroup title="meta" full>
+        <FieldGroup num={7} title="Meta" full>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-meta text-muted">
             <ReadOnly label="slug" value={artwork.slug} />
             <ReadOnly label="created" value={artwork.created_at} />
@@ -1129,19 +1127,45 @@ function trimNum(n: number | null | undefined): string {
   return Number(n).toString();
 }
 
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
 function FieldGroup({
   title,
   children,
   full,
+  num,
+  prose,
 }: {
   title: string;
   children: ReactNode;
   full?: boolean;
+  /** 1-indexed section number; will be rendered as a Roman numeral */
+  num?: number;
+  /** wider single-column layout for editorial prose (descriptions, meta) */
+  prose?: boolean;
 }) {
   return (
     <section className={full ? "md:col-span-2" : undefined}>
-      <h2 className="eyebrow mb-3">{title}</h2>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">{children}</div>
+      <header className="flex items-baseline gap-3 mb-4 pb-2 border-b border-current/30">
+        {num !== undefined && (
+          <span
+            aria-hidden
+            className="font-display text-h2 leading-none text-[var(--red)]"
+          >
+            {ROMAN[num - 1] ?? num}
+          </span>
+        )}
+        <h2 className="font-display text-h2 leading-none">{title}</h2>
+      </header>
+      <div
+        className={
+          prose
+            ? "space-y-6 max-w-reading"
+            : "grid grid-cols-2 gap-x-6 gap-y-4"
+        }
+      >
+        {children}
+      </div>
     </section>
   );
 }

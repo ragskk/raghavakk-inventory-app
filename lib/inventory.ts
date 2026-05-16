@@ -699,6 +699,72 @@ export async function updateArtwork(
 }
 
 /**
+ * Apply the same patch to many artworks in a single Octokit commit.
+ *
+ * Skips artworks that don't exist or are archived (returned in `skipped`).
+ * Atomicity: every update happens inside ONE runDbWrite callback, so
+ * either all UPDATEs land or none do (OCC retry re-runs the whole batch).
+ */
+export interface BulkUpdateResult {
+  updated_ids: number[];
+  skipped: { id: number; reason: string }[];
+}
+
+export async function bulkUpdateArtworks(
+  ids: number[],
+  patch: UpdateArtworkPatch
+): Promise<BulkUpdateResult> {
+  if (ids.length === 0) {
+    return { updated_ids: [], skipped: [] };
+  }
+  const patchKeys = Object.keys(patch).filter(
+    (k) => (patch as Record<string, unknown>)[k] !== undefined
+  );
+  if (patchKeys.length === 0) {
+    throw new Error("bulkUpdateArtworks: empty patch");
+  }
+
+  return runDbWrite<BulkUpdateResult>(
+    async (db) => {
+      const updated: number[] = [];
+      const skipped: { id: number; reason: string }[] = [];
+
+      const sets = patchKeys.map((k) => `${k} = $${k}`).join(", ");
+      const baseParams: Record<string, string | number | null> = {};
+      for (const k of patchKeys) {
+        baseParams[`$${k}`] = (patch as Record<string, string | number | null>)[k];
+      }
+
+      for (const id of ids) {
+        const existing = rowsToObjects<{ id: number; is_archived: 0 | 1 }>(
+          execRows(
+            db,
+            `SELECT id, is_archived FROM artworks WHERE id = $id`,
+            { $id: id }
+          )
+        );
+        if (existing.length === 0) {
+          skipped.push({ id, reason: "not found" });
+          continue;
+        }
+        if (existing[0].is_archived === 1) {
+          skipped.push({ id, reason: "archived" });
+          continue;
+        }
+        db.run(
+          `UPDATE artworks SET ${sets}, updated_at = datetime('now') WHERE id = $id`,
+          { ...baseParams, $id: id }
+        );
+        updated.push(id);
+      }
+
+      return { updated_ids: updated, skipped };
+    },
+    `bulk update ${ids.length} artworks (${patchKeys.join(", ")})`
+  );
+}
+
+/**
  * Soft-delete. Sets is_archived = 1, records timestamp + reason, and
  * preserves all other fields so the row can be revived later if needed.
  */
@@ -752,6 +818,27 @@ export interface SeriesRow {
   next_seq: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface MediumRow {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+}
+
+export async function listMediums(): Promise<MediumRow[]> {
+  const { db } = await openDbForRead();
+  try {
+    return rowsToObjects<MediumRow>(
+      execRows(
+        db,
+        `SELECT id, name, slug, category FROM mediums ORDER BY name ASC`
+      )
+    );
+  } finally {
+    db.close();
+  }
 }
 
 export async function listSeries(): Promise<SeriesRow[]> {
