@@ -1,0 +1,39 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# Build artifacts
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# Env
+.env*.local
+.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+
+# Vercel
+.vercel
+
+# Backup tags
+*.bak-*
+
+# Inventory-app planning artifacts kept in repo, not gitignored:
+#   HANDOFF.md, INVENTORY_APP_NOTES.md, ROADMAP.md,
+#   schema.sql, schema-diagram.md, RKK_inventory_schema_template.xlsx
+
+# Resolved drafts folder — delete once removed from disk
+_memory-drafts/
+
+# System secrets
+personal_access_token.txt
