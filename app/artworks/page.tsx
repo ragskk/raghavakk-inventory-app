@@ -133,6 +133,7 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
         <table className="dash-table">
           <thead>
             <tr>
+              <th className="w-16">thumb</th>
               <th>inventory #</th>
               <th>title</th>
               <th>series</th>
@@ -148,6 +149,31 @@ export default async function ArtworksListPage({ searchParams }: PageProps) {
               const archived = r.is_archived === 1;
               return (
                 <tr key={r.id} className={archived ? "opacity-50" : undefined}>
+                  <td>
+                    <Link
+                      href={`/artworks/${r.slug}`}
+                      className="block w-14 h-14 bg-paper-shade overflow-hidden"
+                      aria-label={`Open ${r.title}`}
+                    >
+                      {r.primary_image_id != null ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={`/api/work-image/${r.id}/thumb`}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="flex w-full h-full items-center justify-center font-mono text-[10px] text-muted"
+                        >
+                          —
+                        </span>
+                      )}
+                    </Link>
+                  </td>
                   <td className="font-mono text-meta">
                     <Link href={`/artworks/${r.slug}`} className="underline">
                       {r.inventory_number}
